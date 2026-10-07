@@ -1,0 +1,10 @@
+<Solution>
+  <Configurations>
+    <Platform Name="ARM64" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="MechaMan.vcxproj" Id="492721df-7bb9-49a6-b212-c8da2e736ad1">
+    <Deploy />
+  </Project>
+</Solution>
