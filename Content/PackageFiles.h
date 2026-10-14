@@ -30,4 +30,8 @@ namespace MechaMan
 		// An image file (PNG, BMP, JPEG, GIF), decoded. Throws if it cannot be read or decoded.
 		Image ReadImage(const std::wstring& fileName);
 	}
+	
+
+	struct RectF;
+	extern const RectF c_view;
 }

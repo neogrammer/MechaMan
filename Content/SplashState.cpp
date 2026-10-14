@@ -6,18 +6,17 @@
 
 #include "PackageFiles.h"
 #include <iostream>
-
+#include "GameplayState.h"
 
 using namespace MechaMan;
 
 using namespace Windows::Foundation;
 using namespace Windows::Storage;
-
+extern const MechaMan::RectF MechaMan::c_view;
 namespace
 {
 	// Index into the application state map.
 	Platform::String^ TimeKey = "Elapsed";
-	const RectF c_view = { 0.0f, 0.0f, 1920.0f, 1080.0f };
 
 	// A round, shaded ball made in code, for projects without the image the demo looks for.
 	std::shared_ptr<Texture> CreateBallTexture(SpriteRenderer& sprites)
@@ -54,36 +53,24 @@ namespace
 
 SplashState::SplashState(GameStateStack& stack, SpriteRenderer& sprites) :
 	GameState(stack),
-	m_spriteRenderer(sprites),
 	m_timeElapsed(0)
 {
 	LoadState();
 
-	m_entities.resize(1);
 
-	Entity& entity = m_entities[0];
-
-	entity.isBadge = true;
-	entity.size = { 50.f };
-	entity.position = { c_view.width / 2.f, c_view.height / 2.f};
-
-	const float direction = DirectX::XM_2PI * 0.7f;
-	const float speed = 60.0f + 240.0f;
-	entity.velocity = { 0.f,0.f };
-
-	entity.angle = DirectX::XM_2PI * 0.4f;
-	entity.spin = 0.f;
-
-	if (entity.isBadge)
+	CidSprite::SetSpriteRenderer(std::addressof(sprites));
+	
+	if (m_spriteVec.empty())
 	{
-		entity.color = { 1.0f, 1.0f, 1.0f, 1.0f };
+		m_spriteVec.push_back(new CidSprite(CidSprite::m_spriteRenderer->LoadTexture(L"Assets\\StoreLogo.png")));
 	}
-	else
+	if (m_spriteVec[0]->GetTexture().get() != nullptr)
 	{
-		// A bright color, partly see-through.
-		entity.color = { 0.3f + 0.7f,  0.3f + 0.1f ,  0.3f + 0.4f, 0.6f };
+		m_spriteVec[0]->Create(m_spriteVec[0]->GetTexture(), 300.f, 0.f);
+	
 	}
 
+	
 }
 
 void SplashState::CreateDeviceDependentResources(const std::shared_ptr<DX::DeviceResources>& deviceResources)
@@ -91,11 +78,24 @@ void SplashState::CreateDeviceDependentResources(const std::shared_ptr<DX::Devic
 	
 	if (PackageFiles::Exists(L"Assets\\StoreLogo.png"))
 	{
-		m_badge = m_spriteRenderer.LoadTexture(L"Assets\\StoreLogo.png");
+		if (m_spriteVec.empty())
+		{
+			m_spriteVec.push_back(new CidSprite{}); // CidSprite::m_spriteRenderer->LoadTexture(L"Assets\\StoreLogo.png")));
+		}
+		if (!m_spriteVec[0]->GetTexture())
+		{
+			m_spriteVec[0]->SetTexture( CidSprite::m_spriteRenderer->LoadTexture(L"Assets\\StoreLogo.png"));
+			m_spriteVec[0]->Create(m_spriteVec[0]->GetTexture(), 300.f, 0.f);
+			
+		}
 	}
 	else
 	{
-		m_badge = CreateBallTexture(m_spriteRenderer);
+		if (m_spriteVec.empty())
+		{
+			m_spriteVec.push_back(new CidSprite(CidSprite::m_spriteRenderer->LoadTexture(L"Assets\\StoreLogo.png")));
+		}
+		m_spriteVec[0]->GetTexture() = CreateBallTexture(*CidSprite::m_spriteRenderer);
 	}
 
 		
@@ -104,6 +104,8 @@ void SplashState::CreateDeviceDependentResources(const std::shared_ptr<DX::Devic
 
 void SplashState::CreateWindowSizeDependentResources()
 {
+
+
 	//if (m_spriteRenderer != nullptr)
 	//{
 	//	m_spriteRenderer->CreateWindowSizeDependentResources();
@@ -112,12 +114,12 @@ void SplashState::CreateWindowSizeDependentResources()
 
 void SplashState::ReleaseDeviceDependentResources()
 {
-	m_badge = nullptr;
+	m_spriteVec[0]->SetTexture(nullptr);
 }
 
-bool SplashState::IsLoaded() const
+bool SplashState::IsLoaded()
 {
-	return m_badge != nullptr;
+	return m_spriteVec[0]->GetTexture()!= nullptr;
 }
 
 void SplashState::OnSuspending()
@@ -134,25 +136,26 @@ void SplashState::Update(DX::StepTimer const& timer)
 	if (m_timeElapsed > 20.f)
 	{
 		std::cout << "Yup" << std::endl;
-		m_stack.Replace(std::make_unique<SpriteDemoState>(m_stack, m_spriteRenderer));
+		m_stack.Replace(std::make_unique<GameplayState>(m_stack));
 	}
 }
 
 void SplashState::Render(ID3D12GraphicsCommandList* commandList)
 {
 
-	m_spriteRenderer.Begin();
+	CidSprite::m_spriteRenderer->Begin();
 
-	Sprite sprite;
-	sprite.texture = m_entities[0].isBadge ? m_badge.get() : CreateBallTexture(m_spriteRenderer).get();
-	sprite.source = { 0, 0, 50, 50 };
-	sprite.position = DirectX::XMFLOAT2(100.f, 100.f);
-	sprite.flipX = false;
-	sprite.layer = 2;
+	Sprite sprite2;
+	sprite2.texture = m_spriteVec[0]->GetTexture().get();
+	sprite2.source = { 0, 0, m_spriteVec[0]->GetEntity().size, m_spriteVec[0]->GetEntity().size};
+	sprite2.position = DirectX::XMFLOAT2(300.f, 100.f);
+	sprite2.flipX = false;
+	sprite2.layer = 2;
+
 	//m_cubeRenderer->Rotate(m_angle);
-	m_spriteRenderer.Draw(sprite);
+	CidSprite::m_spriteRenderer->Draw(sprite2);
 
-	m_spriteRenderer.End(commandList);
+	CidSprite::m_spriteRenderer->End(commandList);
 }
 
 // Saves the current state of the game.

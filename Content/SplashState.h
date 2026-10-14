@@ -5,6 +5,8 @@
 #include "SpriteRenderer.h"
 #include "Entity.h"
 
+#include "CidSprite.h"
+
 namespace MechaMan
 {
 	// The state the game starts in. For now it is the template's spinning cube:
@@ -17,7 +19,7 @@ namespace MechaMan
 		void CreateDeviceDependentResources(const std::shared_ptr<DX::DeviceResources>& deviceResources) override;
 		void CreateWindowSizeDependentResources() override;
 		void ReleaseDeviceDependentResources() override;
-		bool IsLoaded() const override;
+		bool IsLoaded() override;
 
 		void OnSuspending() override;
 
@@ -30,11 +32,13 @@ namespace MechaMan
 
 	private:
 		// GPU objects. Created and released along with the device.
-		SpriteRenderer& m_spriteRenderer;
-		std::shared_ptr<Texture> m_badge;
+//		SpriteRenderer& m_spriteRenderer;
+		//std::shared_ptr<Texture> m_badge;
 
+
+		std::vector<CidSprite*> m_spriteVec;
 		// Game data. Stays put when the device is lost.
 		float	m_timeElapsed;
-		std::vector<Entity>	m_entities;
+		//std::vector<Entity>	m_entities;
 	};
 }

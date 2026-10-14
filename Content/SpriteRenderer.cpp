@@ -13,8 +13,13 @@ using namespace MechaMan;
 using namespace DirectX;
 using namespace Microsoft::WRL;
 
+
+const MechaMan::RectF MechaMan::c_view = { 0.0f, 0.0f, 1280.0f, 720.0f };
+
 namespace
 {
+	
+
 	// One draw call's indices are 16 bits wide, which is enough for this many sprites.
 	const UINT c_maxSpritesPerDraw = 16384;
 
@@ -488,7 +493,9 @@ std::shared_ptr<Texture> SpriteRenderer::CreateTexture(UINT width, UINT height, 
 {
 	if (m_deviceResources == nullptr || width == 0 || height == 0 || pixels == nullptr)
 	{
-		DX::ThrowIfFailed(E_INVALIDARG);
+
+
+		//DX::ThrowIfFailed(E_INVALIDARG);
 	}
 
 	auto d3dDevice = m_deviceResources->GetD3DDevice();

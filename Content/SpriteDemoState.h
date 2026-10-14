@@ -19,7 +19,7 @@ namespace MechaMan
 		void CreateDeviceDependentResources(const std::shared_ptr<DX::DeviceResources>& deviceResources) override;
 		void CreateWindowSizeDependentResources() override;
 		void ReleaseDeviceDependentResources() override;
-		bool IsLoaded() const override;
+		bool IsLoaded() override;
 
 		void Update(DX::StepTimer const& timer) override;
 		void Render(ID3D12GraphicsCommandList* commandList) override;

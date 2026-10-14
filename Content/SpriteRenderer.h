@@ -20,6 +20,8 @@ namespace MechaMan
 		float height;
 	};
 
+	extern const RectF c_view;
+
 	// An image on the GPU that sprites are drawn from. Get one from SpriteRenderer::LoadTexture
 	// or CreateTexture and keep it in a shared_ptr. It is a GPU object like any other: a state
 	// creates its textures in CreateDeviceDependentResources and lets go of them in

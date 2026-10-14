@@ -38,7 +38,7 @@ void GameplayState::ReleaseDeviceDependentResources()
 	m_cubeRenderer = nullptr;
 }
 
-bool GameplayState::IsLoaded() const
+bool GameplayState::IsLoaded()
 {
 	return m_cubeRenderer != nullptr && m_cubeRenderer->IsLoaded();
 }

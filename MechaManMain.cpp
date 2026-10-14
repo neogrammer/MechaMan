@@ -3,7 +3,7 @@
 #include "Common\DirectXHelper.h"
 #include "Content\SplashState.h"
 #include "Content\SpriteDemoState.h"
-
+#include "Content\CidSprite.h"
 using namespace MechaMan;
 using namespace Windows::Foundation;
 using namespace Windows::System::Threading;
@@ -16,6 +16,9 @@ MechaManMain::MechaManMain()
 {
 	// The states the game starts in. The requests are queued here and the states are entered on the first Update.
 	//m_states.Push(std::make_unique<GameplayState>(m_states));
+
+	// first set the sprite renderer to CidSprite static variable 
+	CidSprite::SetSpriteRenderer(&m_sprites);
 
 	// A demonstration of the sprite renderer, drawn over the state above. Remove this line to take it out.
 	m_states.Push(std::make_unique<SplashState>(m_states, m_sprites));

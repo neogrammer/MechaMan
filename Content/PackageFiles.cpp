@@ -5,15 +5,17 @@
 
 #include <cstdio>
 #include <wincodec.h>
+#include "SpriteRenderer.h"
 
 // The Windows image decoder (WIC).
 #pragma comment(lib, "windowscodecs.lib")
 
 using namespace MechaMan;
 using namespace Microsoft::WRL;
-
 namespace
 {
+
+
 	// Says which file was the problem in the debugger's Output window, then throws.
 	[[noreturn]] void ThrowFileError(HRESULT hr, const wchar_t* problem, const std::wstring& path)
 	{

@@ -28,7 +28,7 @@ namespace MechaMan
 
 		// True once the state's GPU resources are ready to draw with.
 		// The stack does not call Update or Render before that.
-		virtual bool IsLoaded() const = 0;
+		virtual bool IsLoaded() = 0;
 
 		// Stack lifetime.
 		virtual void OnEnter() {}	// just pushed onto the stack

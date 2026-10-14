@@ -113,9 +113,9 @@ void SpriteDemoState::ReleaseDeviceDependentResources()
 	m_badge = nullptr;
 }
 
-bool SpriteDemoState::IsLoaded() const
+bool SpriteDemoState::IsLoaded()
 {
-	return m_badge != nullptr;
+	return m_badge.get() != nullptr;
 }
 
 // Game logic only. Nothing in here touches the GPU.
