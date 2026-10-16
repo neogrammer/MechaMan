@@ -14,7 +14,9 @@ namespace MechaMan
 	class SpriteDemoState : public GameState
 	{
 	public:
-		SpriteDemoState(GameStateStack& stack, SpriteRenderer& sprites);
+		explicit SpriteDemoState(GameStateStack& stack);
+		SpriteDemoState(const SpriteDemoState&) = delete;
+		SpriteDemoState& operator=(const SpriteDemoState&) = delete;
 
 		void CreateDeviceDependentResources(const std::shared_ptr<DX::DeviceResources>& deviceResources) override;
 		void CreateWindowSizeDependentResources() override;
@@ -32,8 +34,6 @@ namespace MechaMan
 
 
 	private:
-		// The renderer every state shares.
-		SpriteRenderer& m_sprites;
 
 		// GPU objects. Created and released along with the device.
 		std::shared_ptr<Texture> m_badge;

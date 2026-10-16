@@ -60,15 +60,7 @@ SplashState::SplashState(GameStateStack& stack, SpriteRenderer& sprites) :
 
 	CidSprite::SetSpriteRenderer(std::addressof(sprites));
 	
-	if (m_spriteVec.empty())
-	{
-		m_spriteVec.push_back(new CidSprite(CidSprite::m_spriteRenderer->LoadTexture(L"Assets\\StoreLogo.png")));
-	}
-	if (m_spriteVec[0]->GetTexture().get() != nullptr)
-	{
-		m_spriteVec[0]->Create(m_spriteVec[0]->GetTexture(), 300.f, 0.f);
-	
-	}
+
 
 	
 }
@@ -76,6 +68,16 @@ SplashState::SplashState(GameStateStack& stack, SpriteRenderer& sprites) :
 void SplashState::CreateDeviceDependentResources(const std::shared_ptr<DX::DeviceResources>& deviceResources)
 {
 	
+	if (m_spriteVec.empty())
+	{
+		m_spriteVec.push_back(new CidSprite(CidSprite::m_spriteRenderer->LoadTexture(L"Assets\\StoreLogo.png")));
+	}
+	if (m_spriteVec[0]->GetTexture().get() != nullptr)
+	{
+		m_spriteVec[0]->Create(m_spriteVec[0]->GetTexture(), 300.f, 0.f);
+
+	}
+
 	if (PackageFiles::Exists(L"Assets\\StoreLogo.png"))
 	{
 		if (m_spriteVec.empty())
@@ -115,6 +117,7 @@ void SplashState::CreateWindowSizeDependentResources()
 void SplashState::ReleaseDeviceDependentResources()
 {
 	m_spriteVec[0]->SetTexture(nullptr);
+	m_spriteVec.clear();
 }
 
 bool SplashState::IsLoaded()
@@ -133,10 +136,10 @@ void SplashState::Update(DX::StepTimer const& timer)
 	// Rotate the cube a small amount.
 	m_timeElapsed += static_cast<float>(timer.GetElapsedSeconds());
 
-	if (m_timeElapsed > 20.f)
+	if (m_timeElapsed > 5.f)
 	{
 		std::cout << "Yup" << std::endl;
-		m_stack.Replace(std::make_unique<GameplayState>(m_stack));
+		m_stack.Replace(std::make_unique<SpriteDemoState>(m_stack));
 	}
 }
 

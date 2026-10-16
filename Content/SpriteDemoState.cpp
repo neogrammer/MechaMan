@@ -7,6 +7,8 @@
 #include <cstdio>
 #include <random>
 #include "Entity.h"
+#include "CidSprite.h"
+
 using namespace MechaMan;
 
 using namespace DirectX;
@@ -51,11 +53,11 @@ namespace
 	}
 }
 
-SpriteDemoState::SpriteDemoState(GameStateStack& stack, SpriteRenderer& sprites) :
+SpriteDemoState::SpriteDemoState(GameStateStack& stack) :
 	GameState(stack),
-	m_sprites(sprites),
 	m_secondsSinceReport(0.0)
 {
+
 	// Scatter the entities. A fixed seed gives the same scene every run.
 	std::mt19937 random(12345);
 	std::uniform_real_distribution<float> unit(0.0f, 1.0f);
@@ -95,11 +97,11 @@ void SpriteDemoState::CreateDeviceDependentResources(const std::shared_ptr<DX::D
 	// one; if this project does not, a ball made in code stands in for it.
 	if (PackageFiles::Exists(L"Assets\\StoreLogo.png"))
 	{
-		m_badge = m_sprites.LoadTexture(L"Assets\\StoreLogo.png");
+		m_badge = CidSprite::m_spriteRenderer->LoadTexture(L"Assets\\StoreLogo.png");
 	}
 	else
 	{
-		m_badge = CreateBallTexture(m_sprites);
+		m_badge = CreateBallTexture(*CidSprite::m_spriteRenderer	);
 	}
 }
 
@@ -160,14 +162,14 @@ void SpriteDemoState::Update(DX::StepTimer const& timer)
 		m_secondsSinceReport = 0.0;
 
 		wchar_t report[96];
-		swprintf_s(report, L"SpriteDemoState: %u sprites drawn with %u draw calls\n", m_sprites.GetSpriteCount(), m_sprites.GetDrawCallCount());
+		swprintf_s(report, L"SpriteDemoState: %u sprites drawn with %u draw calls\n", CidSprite::m_spriteRenderer->GetSpriteCount(), CidSprite::m_spriteRenderer->GetDrawCallCount());
 		OutputDebugStringW(report);
 	}
 }
 
 void SpriteDemoState::Render(ID3D12GraphicsCommandList* commandList)
 {
-	m_sprites.Begin(c_view);
+	CidSprite::m_spriteRenderer->Begin(c_view);
 
 	// The entities go to the renderer in whatever order the list has them in, badges and
 	// squares mixed together. The renderer sorts them out: every square in one draw call,
@@ -184,8 +186,8 @@ void SpriteDemoState::Render(ID3D12GraphicsCommandList* commandList)
 		sprite.color = entity.color;
 		sprite.layer = entity.isBadge ? 1 : 0;
 
-		m_sprites.Draw(sprite);
+		CidSprite::m_spriteRenderer->Draw(sprite);
 	}
 
-	m_sprites.End(commandList);
+	CidSprite::m_spriteRenderer->End(commandList);
 }

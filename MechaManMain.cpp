@@ -21,7 +21,7 @@ MechaManMain::MechaManMain()
 	CidSprite::SetSpriteRenderer(&m_sprites);
 
 	// A demonstration of the sprite renderer, drawn over the state above. Remove this line to take it out.
-	m_states.Push(std::make_unique<SplashState>(m_states, m_sprites));
+	
 
 	// TODO: Change the timer settings if you want something other than the default variable timestep mode.
 	// e.g. for 60 FPS fixed timestep update logic, call:
@@ -38,6 +38,8 @@ void MechaManMain::CreateRenderers(const std::shared_ptr<DX::DeviceResources>& d
 	std::lock_guard<std::mutex> lock(m_mutex);
 
 	m_deviceResources = deviceResources;
+
+	m_states.Push(std::make_unique<SplashState>(m_states, m_sprites));
 
 	// CreateCommandList returns the list open; close it so Render() can Reset it.
 	DX::ThrowIfFailed(deviceResources->GetD3DDevice()->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, deviceResources->GetCommandAllocator(), nullptr, IID_PPV_ARGS(&m_commandList)));
