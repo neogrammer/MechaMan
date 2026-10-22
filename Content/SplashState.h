@@ -6,6 +6,12 @@
 #include "Entity.h"
 
 #include "CidSprite.h"
+#include <memory>
+#include "../Common/DeviceResources.h"
+
+#include "SpriteFont.h"
+#include "ResourceUploadBatch.h"
+#include "DescriptorHeap.h"
 
 namespace MechaMan
 {
@@ -26,15 +32,30 @@ namespace MechaMan
 		void Update(DX::StepTimer const& timer) override;
 		void Render(ID3D12GraphicsCommandList* commandList) override;
 
+
+		void LoadFonts(std::shared_ptr<DX::DeviceResources> deviceResources);
 	private:
 		void SaveState();
 		void LoadState();
 
-	private:
-		// GPU objects. Created and released along with the device.
-//		SpriteRenderer& m_spriteRenderer;
-		//std::shared_ptr<Texture> m_badge;
 
+	
+
+	private:
+
+		// font
+		std::unique_ptr<DirectX::SpriteFont> m_font;
+		std::unique_ptr<DirectX::DescriptorHeap> m_resourceDescriptors;
+
+		// GPU objects. Created and released along with the device.
+		std::shared_ptr<DX::DeviceResources> m_deviceResources;
+
+		// For your command list
+		Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> m_commandList;
+
+		// For your sprite batch
+		std::unique_ptr<DirectX::SpriteBatch> m_spriteBatch;
+		D3D12_VIEWPORT m_viewport{};
 
 		std::vector<CidSprite*> m_spriteVec;
 		// Game data. Stays put when the device is lost.

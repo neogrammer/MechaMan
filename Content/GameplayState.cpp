@@ -51,36 +51,63 @@ void GameplayState::OnSuspending()
 // Game logic only. Nothing in here touches the GPU.
 void GameplayState::Update(DX::StepTimer const& timer)
 {
-	// Rotate the cube a small amount.
-	m_angle += static_cast<float>(timer.GetElapsedSeconds()) * m_radiansPerSecond;
+	try
+	{
+		// Rotate the cube a small amount.
+		m_angle += static_cast<float>(timer.GetElapsedSeconds()) * m_radiansPerSecond;
+	}
+	catch (...)
+	{
+		// Gracefully handle update errors
+	}
 }
 
 void GameplayState::Render(ID3D12GraphicsCommandList* commandList)
 {
-	m_cubeRenderer->Rotate(m_angle);
-	m_cubeRenderer->Render(commandList);
+	// Defensive check: ensure m_cubeRenderer is valid before rendering
+	if (m_cubeRenderer != nullptr)
+	{
+		m_cubeRenderer->Rotate(m_angle);
+		m_cubeRenderer->Render(commandList);
+	}
 }
 
 // Saves the current state of the game.
 void GameplayState::SaveState()
 {
-	auto state = ApplicationData::Current->LocalSettings->Values;
-
-	if (state->HasKey(AngleKey))
+	try
 	{
-		state->Remove(AngleKey);
-	}
+		auto state = ApplicationData::Current->LocalSettings->Values;
 
-	state->Insert(AngleKey, PropertyValue::CreateSingle(m_angle));
+		if (state->HasKey(AngleKey))
+		{
+			state->Remove(AngleKey);
+		}
+
+		state->Insert(AngleKey, PropertyValue::CreateSingle(m_angle));
+	}
+	catch (...)
+	{
+		// Silently ignore failures to save state. This can happen during app shutdown
+		// or when ApplicationData access is unavailable.
+	}
 }
 
 // Restores the previous state of the game.
 void GameplayState::LoadState()
 {
-	auto state = ApplicationData::Current->LocalSettings->Values;
-	if (state->HasKey(AngleKey))
+	try
 	{
-		m_angle = safe_cast<IPropertyValue^>(state->Lookup(AngleKey))->GetSingle();
-		state->Remove(AngleKey);
+		auto state = ApplicationData::Current->LocalSettings->Values;
+		if (state->HasKey(AngleKey))
+		{
+			m_angle = safe_cast<IPropertyValue^>(state->Lookup(AngleKey))->GetSingle();
+			state->Remove(AngleKey);
+		}
+	}
+	catch (...)
+	{
+		// Silently ignore failures to load state. This can happen during app initialization
+		// or when ApplicationData access is unavailable. Use default m_angle value.
 	}
 }

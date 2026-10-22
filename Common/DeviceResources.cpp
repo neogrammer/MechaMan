@@ -132,6 +132,9 @@ void DX::DeviceResources::CreateDeviceResources()
 
 	DX::ThrowIfFailed(hr);
 
+	m_graphicsMemory =
+		std::make_unique<DirectX::GraphicsMemory>(m_d3dDevice.Get());
+
 	// Create the command queue.
 	D3D12_COMMAND_QUEUE_DESC queueDesc = {};
 	queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
@@ -154,7 +157,7 @@ void DX::DeviceResources::CreateDeviceResources()
 	dsvHeapDesc.NumDescriptors = 1;
 	dsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
 	dsvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-	ThrowIfFailed(m_d3dDevice->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(&m_dsvHeap)));
+	DX::ThrowIfFailed(m_d3dDevice->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(&m_dsvHeap)));
 	NAME_D3D12_OBJECT(m_dsvHeap);
 
 	for (UINT n = 0; n < c_frameCount; n++)
@@ -294,7 +297,7 @@ void DX::DeviceResources::CreateWindowSizeDependentResources()
 			rtvDescriptor.Offset(m_rtvDescriptorSize);
 
 			WCHAR name[25];
-			if (swprintf_s(name, L"m_renderTargets[%u]", n) > 0)
+			if (swprintf_s(name, _countof(name), L"m_renderTargets[%u]", n) > 0)
 			{
 				DX::SetName(m_renderTargets[n].Get(), name);
 			}
@@ -310,12 +313,12 @@ void DX::DeviceResources::CreateWindowSizeDependentResources()
 
 		CD3DX12_CLEAR_VALUE depthOptimizedClearValue(m_depthBufferFormat, 1.0f, 0);
 
-		ThrowIfFailed(m_d3dDevice->CreateCommittedResource(
-			&depthHeapProperties,
+		DX::ThrowIfFailed(m_d3dDevice->CreateCommittedResource(
+				&depthHeapProperties,
 			D3D12_HEAP_FLAG_NONE,
-			&depthResourceDesc,
+				&depthResourceDesc,
 			D3D12_RESOURCE_STATE_DEPTH_WRITE,
-			&depthOptimizedClearValue,
+				&depthOptimizedClearValue,
 			IID_PPV_ARGS(&m_depthStencil)
 			));
 

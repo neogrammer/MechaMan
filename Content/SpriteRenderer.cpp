@@ -307,6 +307,9 @@ void SpriteRenderer::CreateDeviceDependentResources(const std::shared_ptr<DX::De
 	// One white pixel: what a sprite without a texture is drawn from.
 	const uint8_t white[] = { 255, 255, 255, 255 };
 	m_whiteTexture = CreateTexture(1, 1, white);
+
+	
+
 }
 
 // The device is gone. Every state has to let go of its textures as well.
@@ -493,9 +496,7 @@ std::shared_ptr<Texture> SpriteRenderer::CreateTexture(UINT width, UINT height, 
 {
 	if (m_deviceResources == nullptr || width == 0 || height == 0 || pixels == nullptr)
 	{
-
-
-		//DX::ThrowIfFailed(E_INVALIDARG);
+		DX::ThrowIfFailed(E_INVALIDARG);
 	}
 
 	auto d3dDevice = m_deviceResources->GetD3DDevice();

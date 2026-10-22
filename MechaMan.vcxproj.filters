@@ -62,6 +62,9 @@
     <Image Include="Assets\Wide310x150Logo.scale-200.png">
       <Filter>Assets</Filter>
     </Image>
+    <Filter Include="Assets\fonts">
+      <UniqueIdentifier>{ad7def79-c8a0-4efd-82ce-fcb28f6af352}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="App.cpp" />
@@ -137,5 +140,10 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="MechaMan_TemporaryKey.pfx" />
+    <None Include="packages.config" />
+    <None Include="fonts\myfile.spritefont">
+      <Filter>Assets\fonts</Filter>
+    </None>
+    <None Include="FONT_RENDERING_GUIDE.md" />
   </ItemGroup>
 </Project>

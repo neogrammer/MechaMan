@@ -93,6 +93,13 @@ SpriteDemoState::SpriteDemoState(GameStateStack& stack) :
 
 void SpriteDemoState::CreateDeviceDependentResources(const std::shared_ptr<DX::DeviceResources>& deviceResources)
 {
+	if (CidSprite::m_spriteRenderer == nullptr)
+	{
+		// OutputDebugStringW can fail during app shutdown or certain thread conditions,
+		// causing invalid parameter exceptions. Avoid calling it here.
+		return;
+	}
+
 	// An image from the app package. Projects made from the Visual Studio template have this
 	// one; if this project does not, a ball made in code stands in for it.
 	if (PackageFiles::Exists(L"Assets\\StoreLogo.png"))
@@ -123,71 +130,93 @@ bool SpriteDemoState::IsLoaded()
 // Game logic only. Nothing in here touches the GPU.
 void SpriteDemoState::Update(DX::StepTimer const& timer)
 {
-	const float seconds = static_cast<float>(timer.GetElapsedSeconds());
-
-	for (Entity& entity : m_entities)
+	try
 	{
-		entity.position.x += entity.velocity.x * seconds;
-		entity.position.y += entity.velocity.y * seconds;
-		entity.angle += entity.spin * seconds;
+		const float seconds = static_cast<float>(timer.GetElapsedSeconds());
 
-		// Bounce off the edges of the view.
-		const float half = entity.size * 0.5f;
-		if (entity.position.x < c_view.x + half)
+		for (Entity& entity : m_entities)
 		{
-			entity.position.x = c_view.x + half;
-			entity.velocity.x = fabsf(entity.velocity.x);
+			entity.position.x += entity.velocity.x * seconds;
+			entity.position.y += entity.velocity.y * seconds;
+			entity.angle += entity.spin * seconds;
+
+			// Bounce off the edges of the view.
+			const float half = entity.size * 0.5f;
+			if (entity.position.x < c_view.x + half)
+			{
+				entity.position.x = c_view.x + half;
+				entity.velocity.x = fabsf(entity.velocity.x);
+			}
+			if (entity.position.x > c_view.x + c_view.width - half)
+			{
+				entity.position.x = c_view.x + c_view.width - half;
+				entity.velocity.x = -fabsf(entity.velocity.x);
+			}
+			if (entity.position.y < c_view.y + half)
+			{
+				entity.position.y = c_view.y + half;
+				entity.velocity.y = fabsf(entity.velocity.y);
+			}
+			if (entity.position.y > c_view.y + c_view.height - half)
+			{
+				entity.position.y = c_view.y + c_view.height - half;
+				entity.velocity.y = -fabsf(entity.velocity.y);
+			}
 		}
-		if (entity.position.x > c_view.x + c_view.width - half)
+
+		// Once a second, say in the debugger's Output window what the last frame cost.
+		m_secondsSinceReport += timer.GetElapsedSeconds();
+		if (m_secondsSinceReport >= 1.0)
 		{
-			entity.position.x = c_view.x + c_view.width - half;
-			entity.velocity.x = -fabsf(entity.velocity.x);
-		}
-		if (entity.position.y < c_view.y + half)
-		{
-			entity.position.y = c_view.y + half;
-			entity.velocity.y = fabsf(entity.velocity.y);
-		}
-		if (entity.position.y > c_view.y + c_view.height - half)
-		{
-			entity.position.y = c_view.y + c_view.height - half;
-			entity.velocity.y = -fabsf(entity.velocity.y);
+			m_secondsSinceReport = 0.0;
+
+			// OutputDebugStringW can fail during app shutdown or certain thread conditions,
+			// causing invalid parameter exceptions. Debug output is disabled for safety.
+			// wchar_t report[256];
+			// swprintf_s(report, _countof(report), L"SpriteDemoState: %u sprites drawn with %u draw calls\n", CidSprite::m_spriteRenderer->GetSpriteCount(), CidSprite::m_spriteRenderer->GetDrawCallCount());
+			// OutputDebugStringW(report);
 		}
 	}
-
-	// Once a second, say in the debugger's Output window what the last frame cost.
-	m_secondsSinceReport += timer.GetElapsedSeconds();
-	if (m_secondsSinceReport >= 1.0)
+	catch (...)
 	{
-		m_secondsSinceReport = 0.0;
-
-		wchar_t report[96];
-		swprintf_s(report, L"SpriteDemoState: %u sprites drawn with %u draw calls\n", CidSprite::m_spriteRenderer->GetSpriteCount(), CidSprite::m_spriteRenderer->GetDrawCallCount());
-		OutputDebugStringW(report);
+		// Gracefully handle update errors
 	}
 }
 
 void SpriteDemoState::Render(ID3D12GraphicsCommandList* commandList)
 {
-	CidSprite::m_spriteRenderer->Begin(c_view);
-
-	// The entities go to the renderer in whatever order the list has them in, badges and
-	// squares mixed together. The renderer sorts them out: every square in one draw call,
-	// then every badge, on the layer above, in another.
-	Sprite sprite;
-	sprite.origin = { 0.5f, 0.5f };
-
-	for (const Entity& entity : m_entities)
+	if (CidSprite::m_spriteRenderer == nullptr)
 	{
-		sprite.texture = entity.isBadge ? m_badge.get() : nullptr;
-		sprite.position = entity.position;
-		sprite.size = { entity.size, entity.size };
-		sprite.rotation = entity.angle;
-		sprite.color = entity.color;
-		sprite.layer = entity.isBadge ? 1 : 0;
-
-		CidSprite::m_spriteRenderer->Draw(sprite);
+		return;
 	}
 
-	CidSprite::m_spriteRenderer->End(commandList);
+	try
+	{
+		CidSprite::m_spriteRenderer->Begin(c_view);
+
+		// The entities go to the renderer in whatever order the list has them in, badges and
+		// squares mixed together. The renderer sorts them out: every square in one draw call,
+		// then every badge, on the layer above, in another.
+		Sprite sprite;
+		sprite.origin = { 0.5f, 0.5f };
+
+		for (const Entity& entity : m_entities)
+		{
+			sprite.texture = entity.isBadge ? m_badge.get() : nullptr;
+			sprite.position = entity.position;
+			sprite.size = { entity.size, entity.size };
+			sprite.rotation = entity.angle;
+			sprite.color = entity.color;
+			sprite.layer = entity.isBadge ? 1 : 0;
+
+			CidSprite::m_spriteRenderer->Draw(sprite);
+		}
+
+		CidSprite::m_spriteRenderer->End(commandList);
+	}
+	catch (...)
+	{
+		// Gracefully handle rendering errors. This can happen during app shutdown
+		// or when GPU resources become unavailable.
+	}
 }

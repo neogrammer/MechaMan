@@ -78,7 +78,10 @@ CidSprite::CidSprite(SpriteRenderer* rend, std::shared_ptr<Texture> tex)
 
 CidSprite::~CidSprite()
 {
-	CidSprite::m_spriteRenderer = nullptr;
+	// The renderer is owned by MechaManMain, not by an individual sprite.
+	// A state transition destroys sprites while the renderer remains valid.
+	// Do not clear this shared pointer here; doing so leaves the next state
+	// with a null renderer.
 }
 
 CidSprite& CidSprite::operator=(CidSprite&& o)

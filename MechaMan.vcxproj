@@ -272,12 +272,26 @@
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
+    <None Include="fonts\myfile.spritefont">
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
+    </None>
+    <None Include="FONT_RENDERING_GUIDE.md" />
     <None Include="MechaMan_TemporaryKey.pfx" />
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
     <Import Project="$(VSINSTALLDIR)\Common7\IDE\Extensions\Microsoft\VsGraphics\ImageContentTask.targets" />
     <Import Project="$(VSINSTALLDIR)\Common7\IDE\Extensions\Microsoft\VsGraphics\MeshContentTask.targets" />
     <Import Project="$(VSINSTALLDIR)\Common7\IDE\Extensions\Microsoft\VsGraphics\ShaderGraphContentTask.targets" />
+    <Import Project="packages\directxtk12_uwp.2026.5.8.1\build\native\directxtk12_uwp.targets" Condition="Exists('packages\directxtk12_uwp.2026.5.8.1\build\native\directxtk12_uwp.targets')" />
   </ImportGroup>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('packages\directxtk12_uwp.2026.5.8.1\build\native\directxtk12_uwp.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\directxtk12_uwp.2026.5.8.1\build\native\directxtk12_uwp.targets'))" />
+  </Target>
 </Project>

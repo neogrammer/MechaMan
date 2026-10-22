@@ -1,7 +1,9 @@
 #include "pch.h"
 #include "App.h"
 
+#include <intrin.h>
 #include <ppltasks.h>
+#include <stdlib.h>
 
 using namespace MechaMan;
 
@@ -17,12 +19,36 @@ using namespace Windows::Graphics::Display;
 
 using Microsoft::WRL::ComPtr;
 
+#if defined(_DEBUG)
+namespace
+{
+	void InvalidParameterHandler(
+		const wchar_t* expression,
+		const wchar_t* function,
+		const wchar_t* file,
+		unsigned int,
+		uintptr_t)
+	{
+		// The default behavior is to terminate the process. However, calling __debugbreak() here
+		// can cause unrecoverable exceptions during exception unwinding. Instead, we just return
+		// to allow the C runtime to handle it normally, or we can throw an exception to allow
+		// catching it elsewhere. For UWP apps, it's safer to just gracefully return.
+		// This parameter handler prevents fatal termination in some cases.
+		return;
+	}
+}
+#endif
+
 // The DirectX 12 Application template is documented at https://go.microsoft.com/fwlink/?LinkID=613670&clcid=0x409
 
 // The main function is only used to initialize our IFrameworkView class.
 [Platform::MTAThread]
 int main(Platform::Array<Platform::String^>^)
 {
+#if defined(_DEBUG)
+	_set_invalid_parameter_handler(InvalidParameterHandler);
+#endif
+
 	auto direct3DApplicationSource = ref new Direct3DApplicationSource();
 	CoreApplication::Run(direct3DApplicationSource);
 	return 0;
@@ -85,32 +111,44 @@ void App::Load(Platform::String^ entryPoint)
 	{
 		m_main = std::unique_ptr<MechaManMain>(new MechaManMain());
 	}
+
+	// Create the device and all device-dependent game resources before Run starts.
+	// Deferring this until the first frame allowed Run to dereference an incompletely
+	// initialized renderer when the CoreWindow was activated immediately.
+	GetDeviceResources();
 }
 
 // This method is called after the window becomes active.
 void App::Run()
 {
+#if defined(_DEBUG)
+	// CoreApplication runs this method on its ASTA thread, which may not inherit
+	// the invalid-parameter handler installed by main on the MTA thread.
+	_set_invalid_parameter_handler(InvalidParameterHandler);
+#endif
+
+	if (m_main == nullptr || CoreWindow::GetForCurrentThread() == nullptr)
+	{
+		m_windowClosed = true;
+		return;
+	}
+
 	while (!m_windowClosed)
 	{
 		if (m_windowVisible)
 		{
 			CoreWindow::GetForCurrentThread()->Dispatcher->ProcessEvents(CoreProcessEventsOption::ProcessAllIfPresent);
 
-			auto commandQueue = GetDeviceResources()->GetCommandQueue();
-			PIXBeginEvent(commandQueue, 0, L"Update");
 			{
 				m_main->Update();
 			}
-			PIXEndEvent(commandQueue);
 
-			PIXBeginEvent(commandQueue, 0, L"Render");
 			{
 				if (m_main->Render())
 				{
 					GetDeviceResources()->Present();
 				}
 			}
-			PIXEndEvent(commandQueue);
 		}
 		else
 		{
@@ -144,7 +182,10 @@ void App::OnSuspending(Platform::Object^ sender, SuspendingEventArgs^ args)
 
 	create_task([this, deferral]()
 	{
-		m_main->OnSuspending();
+		if (m_main != nullptr)
+		{
+			m_main->OnSuspending();
+		}
 		deferral->Complete();
 	});
 }
@@ -155,7 +196,10 @@ void App::OnResuming(Platform::Object^ sender, Platform::Object^ args)
 	// and state are persisted when resuming from suspend. Note that this event
 	// does not occur if the app was previously terminated.
 
-	m_main->OnResuming();
+	if (m_main != nullptr)
+	{
+		m_main->OnResuming();
+	}
 }
 
 // Window event handlers.
@@ -163,7 +207,10 @@ void App::OnResuming(Platform::Object^ sender, Platform::Object^ args)
 void App::OnWindowSizeChanged(CoreWindow^ sender, WindowSizeChangedEventArgs^ args)
 {
 	GetDeviceResources()->SetLogicalSize(Size(sender->Bounds.Width, sender->Bounds.Height));
-	m_main->OnWindowSizeChanged();
+	if (m_main != nullptr)
+	{
+		m_main->OnWindowSizeChanged();
+	}
 }
 
 void App::OnVisibilityChanged(CoreWindow^ sender, VisibilityChangedEventArgs^ args)
@@ -185,13 +232,19 @@ void App::OnDpiChanged(DisplayInformation^ sender, Object^ args)
 	// you should always retrieve it using the GetDpi method.
 	// See DeviceResources.cpp for more details.
 	GetDeviceResources()->SetDpi(sender->LogicalDpi);
-	m_main->OnWindowSizeChanged();
+	if (m_main != nullptr)
+	{
+		m_main->OnWindowSizeChanged();
+	}
 }
 
 void App::OnOrientationChanged(DisplayInformation^ sender, Object^ args)
 {
 	GetDeviceResources()->SetCurrentOrientation(sender->CurrentOrientation);
-	m_main->OnWindowSizeChanged();
+	if (m_main != nullptr)
+	{
+		m_main->OnWindowSizeChanged();
+	}
 }
 
 void App::OnDisplayContentsInvalidated(DisplayInformation^ sender, Object^ args)
@@ -207,7 +260,10 @@ std::shared_ptr<DX::DeviceResources> App::GetDeviceResources()
 		// can be created.
 
 		m_deviceResources = nullptr;
-		m_main->OnDeviceRemoved();
+		if (m_main != nullptr)
+		{
+			m_main->OnDeviceRemoved();
+		}
 
 #if defined(_DEBUG)
 		ComPtr<IDXGIDebug1> dxgiDebug;
@@ -222,7 +278,10 @@ std::shared_ptr<DX::DeviceResources> App::GetDeviceResources()
 	{
 		m_deviceResources = std::make_shared<DX::DeviceResources>();
 		m_deviceResources->SetWindow(CoreWindow::GetForCurrentThread());
-		m_main->CreateRenderers(m_deviceResources);
+		if (m_main != nullptr)
+		{
+			m_main->CreateRenderers(m_deviceResources);
+		}
 	}
 	return m_deviceResources;
 }

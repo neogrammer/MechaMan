@@ -40,6 +40,7 @@ void MechaManMain::CreateRenderers(const std::shared_ptr<DX::DeviceResources>& d
 	m_deviceResources = deviceResources;
 
 	m_states.Push(std::make_unique<SplashState>(m_states, m_sprites));
+	
 
 	// CreateCommandList returns the list open; close it so Render() can Reset it.
 	DX::ThrowIfFailed(deviceResources->GetD3DDevice()->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, deviceResources->GetCommandAllocator(), nullptr, IID_PPV_ARGS(&m_commandList)));
@@ -133,6 +134,9 @@ void MechaManMain::OnWindowSizeChanged()
 	std::lock_guard<std::mutex> lock(m_mutex);
 
 	m_states.CreateWindowSizeDependentResources();
+
+	// The top state may no longer be SplashState after the timed transition.
+	// Font resources are optional and are not recreated from this callback.
 }
 
 // Notifies the app that it is being suspended.
@@ -155,6 +159,10 @@ void MechaManMain::OnResuming()
 	std::lock_guard<std::mutex> lock(m_mutex);
 
 	m_states.OnResuming();
+	if (auto* splash = dynamic_cast<SplashState*>(m_states.Top()))
+	{
+		splash->LoadFonts(m_deviceResources);
+	}
 }
 
 // Notifies renderers that device resources need to be released.

@@ -52,27 +52,38 @@ std::vector<uint8_t> PackageFiles::ReadBytes(const std::wstring& fileName)
 {
 	std::wstring path = GetPath(fileName);
 
-	FILE* file = nullptr;
-	if (_wfopen_s(&file, path.c_str(), L"rb") != 0 || file == nullptr)
+	// Use Win32 file APIs for packaged/UWP compatibility.
+	HANDLE file = CreateFile2(
+		path.c_str(),
+		GENERIC_READ,
+		FILE_SHARE_READ,
+		OPEN_EXISTING,
+		nullptr);
+	if (file == INVALID_HANDLE_VALUE)
 	{
-		ThrowFileError(HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), L"cannot open", path);
+		ThrowFileError(HRESULT_FROM_WIN32(GetLastError()), L"cannot open", path);
 	}
 
-	std::vector<uint8_t> bytes;
-	fseek(file, 0, SEEK_END);
-	long size = ftell(file);
-	fseek(file, 0, SEEK_SET);
-	if (size > 0)
+	LARGE_INTEGER fileSize = {};
+	if (!GetFileSizeEx(file, &fileSize) || fileSize.QuadPart <= 0 ||
+		fileSize.QuadPart > static_cast<LONGLONG>(DWORD_MAX))
 	{
-		bytes.resize(static_cast<size_t>(size));
-		bytes.resize(fread(bytes.data(), 1, bytes.size(), file));
-	}
-	fclose(file);
-
-	if (size <= 0 || bytes.size() != static_cast<size_t>(size))
-	{
+		CloseHandle(file);
 		ThrowFileError(E_FAIL, L"cannot read", path);
 	}
+
+	const size_t size = static_cast<size_t>(fileSize.QuadPart);
+
+	std::vector<uint8_t> bytes(size);
+	DWORD bytesRead = 0;
+	if (!ReadFile(file, bytes.data(), static_cast<DWORD>(size), &bytesRead, nullptr) ||
+		bytesRead != static_cast<DWORD>(size))
+	{
+		CloseHandle(file);
+		ThrowFileError(E_FAIL, L"cannot read", path);
+	}
+
+	CloseHandle(file);
 	return bytes;
 }
 

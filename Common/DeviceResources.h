@@ -1,4 +1,5 @@
 ﻿#pragma once
+#include <GraphicsMemory.h>
 
 namespace DX
 {
@@ -47,7 +48,8 @@ namespace DX
 		{
 			return CD3DX12_CPU_DESCRIPTOR_HANDLE(m_dsvHeap->GetCPUDescriptorHandleForHeapStart());
 		}
-
+		// Member in your device/resource owner:
+		std::unique_ptr<DirectX::GraphicsMemory> m_graphicsMemory;
 	private:
 		void CreateDeviceIndependentResources();
 		void CreateDeviceResources();
