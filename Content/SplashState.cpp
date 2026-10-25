@@ -78,9 +78,9 @@ void SplashState::CreateDeviceDependentResources(const std::shared_ptr<DX::Devic
 	if (m_spriteVec.empty())
 	{
 		std::shared_ptr<Texture> texture;
-		if (PackageFiles::Exists(L"Assets\\StoreLogo.png"))
+		if (PackageFiles::Exists(L"Assets\\Logo.png"))
 		{
-			texture = CidSprite::m_spriteRenderer->LoadTexture(L"Assets\\StoreLogo.png");
+			texture = CidSprite::m_spriteRenderer->LoadTexture(L"Assets\\Logo.png");
 		}
 		else
 		{
@@ -201,12 +201,23 @@ void SplashState::Render(ID3D12GraphicsCommandList* commandList)
 			m_spriteBatch->Begin(commandList);
 			m_font->DrawString(
 				m_spriteBatch.get(),
-				L"Hello, DirectX 12!",
-				DirectX::XMFLOAT2(10.0f, 10.0f),
+				L"Blu Ballz Ink",
+				DirectX::XMFLOAT2(m_viewport.Width / 2.f + (m_font->MeasureString("Blu Ballz Ink").m128_f32[3] - m_font->MeasureString("Blu Ballz Ink").m128_f32[0]) / 2.f, m_viewport.Height / 2.f - 18.f),
 				DirectX::Colors::White
 			);
 			m_spriteBatch->End();
 		}
+		auto wid = m_viewport.Width;
+		std::string widStr = std::to_string(wid) + " , ";
+
+		auto hid = m_viewport.Height;
+		std::string hidStr = std::to_string(hid) + "\n";
+		std::string temp = widStr + hidStr;
+		LPCSTR temp2 = temp.c_str();
+		LPCSTR wid2 = widStr.c_str();
+		LPCSTR hid2 = hidStr.c_str();
+		
+		OutputDebugStringA(temp2);
 	}
 	catch (const std::exception& e)
 	{
