@@ -39,6 +39,33 @@ namespace
 }
 #endif
 
+namespace
+{
+	// The game is drawn for 16:9 (c_view is 1280 x 720), which is the shape Xbox always gives
+	// it (a 1920 x 1080 window). On a PC the window can be any shape, so ask for a 16:9 one:
+	// 1280 x 720 if the screen has room, otherwise 960 x 540, in effective pixels (the size
+	// before Windows display scaling). On Xbox, and while the window is maximized or full
+	// screen, Windows ignores this.
+	void MakeWindow16By9()
+	{
+		using namespace Windows::UI::ViewManagement;
+
+		ApplicationView^ view = ApplicationView::GetForCurrentView();
+
+		Size size(1280.0f, 720.0f);
+		if (!view->TryResizeView(size))
+		{
+			size = Size(960.0f, 540.0f);
+			view->TryResizeView(size);
+		}
+
+		// TryResizeView changes this launch; these make Windows open the window at the same
+		// size on later launches.
+		ApplicationView::PreferredLaunchViewSize = size;
+		ApplicationView::PreferredLaunchWindowingMode = ApplicationViewWindowingMode::PreferredLaunchViewSize;
+	}
+}
+
 // The DirectX 12 Application template is documented at https://go.microsoft.com/fwlink/?LinkID=613670&clcid=0x409
 
 // The main function is only used to initialize our IFrameworkView class.
@@ -170,6 +197,8 @@ void App::OnActivated(CoreApplicationView^ applicationView, IActivatedEventArgs^
 {
 	// Run() won't start until the CoreWindow is activated.
 	CoreWindow::GetForCurrentThread()->Activate();
+
+	MakeWindow16By9();
 }
 
 void App::OnSuspending(Platform::Object^ sender, SuspendingEventArgs^ args)

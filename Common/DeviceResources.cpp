@@ -2,6 +2,8 @@
 #include "DeviceResources.h"
 #include "DirectXHelper.h"
 
+#include <cmath>
+
 using namespace DirectX;
 using namespace Microsoft::WRL;
 using namespace Windows::Foundation;
@@ -67,6 +69,7 @@ namespace ScreenRotation
 DX::DeviceResources::DeviceResources(DXGI_FORMAT backBufferFormat, DXGI_FORMAT depthBufferFormat) :
 	m_currentFrame(0),
 	m_screenViewport(),
+	m_aspectRatio(0.0f),
 	m_rtvDescriptorSize(0),
 	m_fenceEvent(0),
 	m_backBufferFormat(backBufferFormat),
@@ -332,8 +335,52 @@ void DX::DeviceResources::CreateWindowSizeDependentResources()
 		m_d3dDevice->CreateDepthStencilView(m_depthStencil.Get(), &dsvDesc, m_dsvHeap->GetCPUDescriptorHandleForHeapStart());
 	}
 
-	// Set the 3D rendering viewport to target the entire window.
-	m_screenViewport = { 0.0f, 0.0f, m_d3dRenderTargetSize.Width, m_d3dRenderTargetSize.Height, 0.0f, 1.0f };
+	UpdateScreenViewport();
+}
+
+void DX::DeviceResources::SetAspectRatio(float aspectRatio)
+{
+	m_aspectRatio = aspectRatio;
+	UpdateScreenViewport();
+}
+
+// The viewport is the whole render target, or with an aspect ratio set, the biggest part of it
+// that has that shape, centred. Whatever is left over at the sides, or at the top and bottom,
+// is never drawn on by the game, so it stays the color it is cleared to: the black bars.
+void DX::DeviceResources::UpdateScreenViewport()
+{
+	const float targetWidth = m_d3dRenderTargetSize.Width;
+	const float targetHeight = m_d3dRenderTargetSize.Height;
+
+	float x = 0.0f;
+	float y = 0.0f;
+	float width = targetWidth;
+	float height = targetHeight;
+
+	if (m_aspectRatio > 0.0f && targetWidth > 0.0f && targetHeight > 0.0f)
+	{
+		// When the display is turned on its side, so is the render target, and the shape
+		// has to be turned with it.
+		const DXGI_MODE_ROTATION rotation = ComputeDisplayRotation();
+		const bool sideways = rotation == DXGI_MODE_ROTATION_ROTATE90 || rotation == DXGI_MODE_ROTATION_ROTATE270;
+		const float aspectRatio = sideways ? 1.0f / m_aspectRatio : m_aspectRatio;
+
+		// Whole pixels, so the edges of the game's area are sharp.
+		if (targetWidth > targetHeight * aspectRatio)
+		{
+			// The window is wider than the game: bars at the left and right.
+			width = std::floor(targetHeight * aspectRatio + 0.5f);
+			x = std::floor((targetWidth - width) * 0.5f);
+		}
+		else
+		{
+			// The window is taller than the game: bars at the top and bottom.
+			height = std::floor(targetWidth / aspectRatio + 0.5f);
+			y = std::floor((targetHeight - height) * 0.5f);
+		}
+	}
+
+	m_screenViewport = { x, y, width, height, 0.0f, 1.0f };
 }
 
 // Determine the dimensions of the render target and whether it will be scaled down.

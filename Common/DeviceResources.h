@@ -14,6 +14,13 @@ namespace DX
 		void SetLogicalSize(Windows::Foundation::Size logicalSize);
 		void SetCurrentOrientation(Windows::Graphics::Display::DisplayOrientations currentOrientation);
 		void SetDpi(float dpi);
+
+		// The shape the game is drawn in, as width / height (16:9 is 1.777...). The screen
+		// viewport becomes the biggest rectangle of that shape that fits in the window,
+		// centred, and the rest of the window is left for black bars. 0, the default, uses
+		// the whole window whatever its shape.
+		void SetAspectRatio(float aspectRatio);
+
 		void ValidateDevice();
 		void Present();
 		void WaitForGpu();
@@ -36,7 +43,7 @@ namespace DX
 		ID3D12CommandAllocator*		GetCommandAllocator() const			{ return m_commandAllocators[m_currentFrame].Get(); }
 		DXGI_FORMAT					GetBackBufferFormat() const			{ return m_backBufferFormat; }
 		DXGI_FORMAT					GetDepthBufferFormat() const		{ return m_depthBufferFormat; }
-		D3D12_VIEWPORT				GetScreenViewport() const			{ return m_screenViewport; }
+		D3D12_VIEWPORT				GetScreenViewport() const			{ return m_screenViewport; }	// the part of the render target the game draws in, in pixels
 		DirectX::XMFLOAT4X4			GetOrientationTransform3D() const	{ return m_orientationTransform3D; }
 		UINT						GetCurrentFrameIndex() const		{ return m_currentFrame; }
 
@@ -55,6 +62,7 @@ namespace DX
 		void CreateDeviceResources();
 		void CreateWindowSizeDependentResources();
 		void UpdateRenderTargetSize();
+		void UpdateScreenViewport();
 		void MoveToNextFrame();
 		DXGI_MODE_ROTATION ComputeDisplayRotation();
 		void GetHardwareAdapter(IDXGIAdapter1** ppAdapter);
@@ -74,6 +82,7 @@ namespace DX
 		DXGI_FORMAT										m_backBufferFormat;
 		DXGI_FORMAT										m_depthBufferFormat;
 		D3D12_VIEWPORT									m_screenViewport;
+		float											m_aspectRatio;		// 0: no bars
 		UINT											m_rtvDescriptorSize;
 		bool											m_deviceRemoved;
 

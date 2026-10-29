@@ -3,7 +3,8 @@
 #include "Common\StepTimer.h"
 #include "Common\DeviceResources.h"
 #include "Content\GameStateStack.h"
-#include "Content\SpriteRenderer.h"
+#include "Content\Graphics.h"
+#include "Content\InputManager.h"
 
 #include <mutex>
 
@@ -30,9 +31,13 @@ namespace MechaMan
 		// The command list each frame is recorded on. Every state draws into it.
 		Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> m_commandList;
 
-		// Draws sprites for whichever states want them. It is declared before the states
+		// The sprite and text renderers every state draws with. Declared before the states
 		// so that it outlives them: they hold textures that belong to it.
-		SpriteRenderer m_sprites;
+		Graphics m_graphics;
+
+		// The keyboard and controllers, read once per update. Also declared before the states,
+		// which keep a reference to it.
+		InputManager m_input;
 
 		// The game states. The top of the stack is the state the player is in.
 		GameStateStack m_states;

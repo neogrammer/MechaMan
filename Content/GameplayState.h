@@ -1,7 +1,8 @@
 #pragma once
 
 #include "GameStateStack.h"
-#include "Sample3DSceneRenderer.h"
+#include "Graphics.h"
+#include "InputManager.h"
 
 namespace MechaMan
 {
@@ -10,28 +11,30 @@ namespace MechaMan
 	class GameplayState : public GameState
 	{
 	public:
-		explicit GameplayState(GameStateStack& stack);
+
+
+
+		explicit GameplayState(GameStateStack& stack, Graphics& graphics, InputManager& input);
 
 		void CreateDeviceDependentResources(const std::shared_ptr<DX::DeviceResources>& deviceResources) override;
-		void CreateWindowSizeDependentResources() override;
+		void CreateWindowSizeDependentResources() override {}
 		void ReleaseDeviceDependentResources() override;
-		bool IsLoaded() override;
-
-		void OnSuspending() override;
+		bool IsLoaded() override { return m_loaded; }
 
 		void Update(DX::StepTimer const& timer) override;
 		void Render(ID3D12GraphicsCommandList* commandList) override;
 
 	private:
-		void SaveState();
-		void LoadState();
+		Graphics& m_graphics;
+		InputManager& m_input;
 
-	private:
-		// GPU objects. Created and released along with the device.
-		std::shared_ptr<Sample3DSceneRenderer> m_cubeRenderer;
+		// GPU objects.
+		std::shared_ptr<Texture>	m_tileset;
+		std::vector<Sprite>		m_tiles;
 
-		// Game data. Stays put when the device is lost.
-		float	m_radiansPerSecond;
-		float	m_angle;
+		bool						m_loaded;
+
 	};
 }
+
+

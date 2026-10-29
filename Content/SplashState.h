@@ -1,65 +1,40 @@
 #pragma once
 
 #include "GameStateStack.h"
-
-#include "SpriteRenderer.h"
-#include "Entity.h"
-
-#include "CidSprite.h"
-#include <memory>
-#include "../Common/DeviceResources.h"
-
-#include "SpriteFont.h"
-#include "ResourceUploadBatch.h"
-#include "DescriptorHeap.h"
+#include "Graphics.h"
+#include "InputManager.h"
 
 namespace MechaMan
 {
-	// The state the game starts in. For now it is the template's spinning cube:
-	// the state owns the game data (the angle) and a renderer that draws it.
+	// The first thing the player sees: the logo fades in out of black, stays a moment,
+	// fades out again, and the title screen takes over. Start or Confirm skips straight
+	// to the title screen.
 	class SplashState : public GameState
 	{
 	public:
-		explicit SplashState(GameStateStack& stack, SpriteRenderer& sprites);
+		SplashState(GameStateStack& stack, Graphics& graphics, InputManager& input);
 
 		void CreateDeviceDependentResources(const std::shared_ptr<DX::DeviceResources>& deviceResources) override;
-		void CreateWindowSizeDependentResources() override;
+		void CreateWindowSizeDependentResources() override {}
 		void ReleaseDeviceDependentResources() override;
-		bool IsLoaded() override;
-
-		void OnSuspending() override;
+		bool IsLoaded() override { return m_loaded; }
 
 		void Update(DX::StepTimer const& timer) override;
 		void Render(ID3D12GraphicsCommandList* commandList) override;
 
-
-		void LoadFonts(std::shared_ptr<DX::DeviceResources> deviceResources);
 	private:
-		void SaveState();
-		void LoadState();
+		// How opaque the logo is right now, from 0 to 1.
+		float Opacity() const;
 
-
-	
-
-	private:
-
-		// font
-		std::unique_ptr<DirectX::SpriteFont> m_font;
-		std::unique_ptr<DirectX::DescriptorHeap> m_resourceDescriptors;
+		Graphics&					m_graphics;
+		InputManager&				m_input;
 
 		// GPU objects. Created and released along with the device.
-		std::shared_ptr<DX::DeviceResources> m_deviceResources;
+		std::shared_ptr<Texture>	m_logo;
+		bool						m_loaded;
 
-		// For your command list
-		Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> m_commandList;
-
-		// For your sprite batch
-		std::unique_ptr<DirectX::SpriteBatch> m_spriteBatch;
-		D3D12_VIEWPORT m_viewport{};
-
-		std::vector<CidSprite*> m_spriteVec;
-		// Game data. Stays put when the device is lost.
-		float	m_timeElapsed;
-		//std::vector<Entity>	m_entities;
+		// Game data.
+		float						m_seconds;		// since the splash started
+		bool						m_finished;
 	};
 }

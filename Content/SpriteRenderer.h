@@ -3,6 +3,7 @@
 #include "..\Common\DeviceResources.h"
 
 #include <cstdint>
+#include <map>
 #include <memory>
 #include <string>
 #include <vector>
@@ -20,7 +21,23 @@ namespace MechaMan
 		float height;
 	};
 
+	// The same in whole pixels, for the part of a texture to draw from. A texture's pixels sit
+	// at whole positions, so unlike a place on screen there is nothing in between them.
+	// (A .cpp file that also says "using namespace Windows::Foundation" has to write
+	// MechaMan::Rect, because Windows has a Rect of its own.)
+	struct Rect
+	{
+		int x;
+		int y;
+		int width;
+		int height;
+	};
+
 	extern const RectF c_view;
+
+	// The biggest rectangle with the proportions of a width x height image that fits inside
+	// 'area' and is centred in it. 'fill' shrinks it: 0.5 makes it half as big.
+	RectF FitInside(UINT width, UINT height, const RectF& area, float fill = 1.0f);
 
 	// An image on the GPU that sprites are drawn from. Get one from SpriteRenderer::LoadTexture
 	// or CreateTexture and keep it in a shared_ptr. It is a GPU object like any other: a state
@@ -51,16 +68,30 @@ namespace MechaMan
 
 	// One image to draw. Set the fields you need; left alone, the rest draw the whole
 	// texture at its own size, unrotated and untinted, with its top-left corner at 'position'.
+	//
+	// A sprite can also be kept, as part of a player or an enemy. Any number of sprites can
+	// point at the same texture, each showing its own part of it through its texRect.
 	struct Sprite
 	{
 		// The image. Leave it null to draw a plain rectangle in 'color'.
 		const Texture*		texture = nullptr;
 
-		// The part of the texture to draw, in pixels. All zeros means the whole texture.
-		RectF				source = { 0.0f, 0.0f, 0.0f, 0.0f };
+		// The part of the texture this sprite shows, in whole pixels: one frame of an
+		// animation strip, say. All zeros means the whole texture.
+		Rect				texRect = { 0, 0, 0, 0 };
+
+		void SetTexRect(const Rect& rect) { texRect = rect; }
+
+		// Back to the whole texture.
+		void ResetTexRect()
+		{
+			texRect = texture != nullptr
+				? Rect{ 0, 0, static_cast<int>(texture->GetWidth()), static_cast<int>(texture->GetHeight()) }
+				: Rect{ 0, 0, 0, 0 };
+		}
 
 		// Where the sprite goes and how big it is drawn, in the units of the view passed to
-		// Begin. A size of zero means the size of 'source'.
+		// Begin. A size of zero means the size of 'texRect'.
 		DirectX::XMFLOAT2	position = { 0.0f, 0.0f };
 		DirectX::XMFLOAT2	size = { 0.0f, 0.0f };
 
@@ -132,6 +163,26 @@ namespace MechaMan
 		void Draw(const Sprite& sprite);
 		void End(ID3D12GraphicsCommandList* commandList);
 
+		// The simple way. These go into the current batch, between Begin and End, and are
+		// batched like any other sprite. 'opacity' runs from 0 (invisible) to 1.
+		void DrawTexture(const Texture* texture, DirectX::XMFLOAT2 position, float opacity = 1.0f, int layer = 0);				// the whole texture, top-left corner at 'position', at its own size
+		void DrawTexture(const Texture* texture, const RectF& destination, float opacity = 1.0f, int layer = 0);				// the whole texture, stretched to fill 'destination'
+		void DrawTexture(const Texture* texture, const Rect& source, const RectF& destination, float opacity = 1.0f, int layer = 0);	// the part 'source' of the texture (in its pixels), stretched to fill 'destination'
+
+		// A sprite's texture, showing the sprite's texRect, stretched to fill 'destination'.
+		// It uses the sprite's flipX and flipY too, so a sprite can face either way; where it
+		// goes, its opacity and its layer come from the arguments. Passing true for
+		// 'resetTexRect' first sets the sprite's texRect back to its whole texture, and the
+		// sprite keeps that for later draws.
+		void DrawTexture(Sprite& sprite, const RectF& destination, float opacity = 1.0f, int layer = 0, bool resetTexRect = false);
+
+		void DrawRectangle(const RectF& rectangle, DirectX::XMFLOAT4 color, int layer = 0);							// a plain filled rectangle
+
+		// Textures by file name: loaded the first time they are asked for, then shared by
+		// everyone who asks for the same file, until the device goes away. Call from the
+		// game loop's thread (CreateDeviceDependentResources, Update or Render).
+		std::shared_ptr<Texture> GetTexture(const std::wstring& fileName);
+
 		// What the last finished frame cost.
 		UINT GetSpriteCount() const { return m_lastFrameSprites; }
 		UINT GetDrawCallCount() const { return m_lastFrameDrawCalls; }
@@ -176,6 +227,7 @@ namespace MechaMan
 		D3D12_INDEX_BUFFER_VIEW						m_indexBufferView;
 		std::shared_ptr<SpriteTextureHeap>			m_textureHeap;
 		std::shared_ptr<Texture>					m_whiteTexture;
+		std::map<std::wstring, std::shared_ptr<Texture>>	m_textureCache;	// GetTexture
 
 		// This frame's vertices.
 		FrameBuffer		m_frameBuffers[DX::c_frameCount];

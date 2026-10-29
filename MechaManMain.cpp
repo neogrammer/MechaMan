@@ -18,7 +18,11 @@ MechaManMain::MechaManMain()
 	//m_states.Push(std::make_unique<GameplayState>(m_states));
 
 	// first set the sprite renderer to CidSprite static variable 
-	CidSprite::SetSpriteRenderer(&m_sprites);
+	CidSprite::SetSpriteRenderer(&m_graphics.sprites);
+
+	// The game starts on the splash screen. Pushed here, once: CreateRenderers runs again
+	// after a device loss, and pushing there would stack a second splash screen.
+	m_states.Push(std::make_unique<SplashState>(m_states, m_graphics, m_input));
 
 	// A demonstration of the sprite renderer, drawn over the state above. Remove this line to take it out.
 	
@@ -39,16 +43,19 @@ void MechaManMain::CreateRenderers(const std::shared_ptr<DX::DeviceResources>& d
 
 	m_deviceResources = deviceResources;
 
-	m_states.Push(std::make_unique<SplashState>(m_states, m_sprites));
-	
+	// The game is drawn in the shape of c_view (16:9, like an Xbox). In a window of any other
+	// shape it keeps that shape, with black bars filling the rest. This comes before the
+	// renderers, which read the viewport when they are created.
+	deviceResources->SetAspectRatio(c_view.width / c_view.height);
 
 	// CreateCommandList returns the list open; close it so Render() can Reset it.
 	DX::ThrowIfFailed(deviceResources->GetD3DDevice()->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, deviceResources->GetCommandAllocator(), nullptr, IID_PPV_ARGS(&m_commandList)));
 	NAME_D3D12_OBJECT(m_commandList);
 	DX::ThrowIfFailed(m_commandList->Close());
 
-	// The sprite renderer comes first: states load their textures through it.
-	m_sprites.CreateDeviceDependentResources(deviceResources);
+	// The renderers come first: states load their textures through them.
+	m_graphics.sprites.CreateDeviceDependentResources(deviceResources);
+	m_graphics.text.CreateDeviceDependentResources(deviceResources, L"fonts\\myfile.spritefont");
 	m_states.CreateDeviceDependentResources(deviceResources);
 }
 
@@ -60,6 +67,11 @@ void MechaManMain::Update()
 	// Update the game states.
 	m_timer.Tick([&]()
 	{
+		// Read the keyboard and controllers first. This is inside Tick because, with a fixed
+		// time step, Tick can run more than one update in a frame (or none), and each press
+		// has to show up in exactly one update.
+		m_input.Update();
+
 		m_states.Update(m_timer);
 	});
 }
@@ -85,9 +97,14 @@ bool MechaManMain::Render()
 
 	// Begin the frame.
 	{
-		// Set the viewport and scissor rectangle.
+		// Set the viewport and scissor rectangle: the game's part of the window, which is all
+		// of it unless the window is a different shape from the game.
 		D3D12_VIEWPORT viewport = m_deviceResources->GetScreenViewport();
-		D3D12_RECT scissorRect = { 0, 0, static_cast<LONG>(viewport.Width), static_cast<LONG>(viewport.Height) };
+		D3D12_RECT scissorRect = {
+			static_cast<LONG>(viewport.TopLeftX),
+			static_cast<LONG>(viewport.TopLeftY),
+			static_cast<LONG>(viewport.TopLeftX + viewport.Width),
+			static_cast<LONG>(viewport.TopLeftY + viewport.Height) };
 		m_commandList->RSSetViewports(1, &viewport);
 		m_commandList->RSSetScissorRects(1, &scissorRect);
 
@@ -99,13 +116,17 @@ bool MechaManMain::Render()
 		// Clear the back buffer and the depth buffer, then draw to them.
 		D3D12_CPU_DESCRIPTOR_HANDLE renderTargetView = m_deviceResources->GetRenderTargetView();
 		D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView = m_deviceResources->GetDepthStencilView();
-		m_commandList->ClearRenderTargetView(renderTargetView, DirectX::Colors::CornflowerBlue, 0, nullptr);
+
+		// Black everywhere first: whatever is outside the game's part stays black, as the bars.
+		// Then the game's part gets the background color the states draw over.
+		m_commandList->ClearRenderTargetView(renderTargetView, DirectX::Colors::Black, 0, nullptr);
+		m_commandList->ClearRenderTargetView(renderTargetView, DirectX::Colors::CornflowerBlue, 1, &scissorRect);
 		m_commandList->ClearDepthStencilView(depthStencilView, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
 		m_commandList->OMSetRenderTargets(1, &renderTargetView, false, &depthStencilView);
 
 		// Let the sprite renderer know a new frame has begun.
-		m_sprites.BeginFrame();
+		m_graphics.sprites.BeginFrame();
 	}
 
 	// Render the game states.
@@ -133,10 +154,8 @@ void MechaManMain::OnWindowSizeChanged()
 {
 	std::lock_guard<std::mutex> lock(m_mutex);
 
+	m_graphics.text.CreateWindowSizeDependentResources();
 	m_states.CreateWindowSizeDependentResources();
-
-	// The top state may no longer be SplashState after the timed transition.
-	// Font resources are optional and are not recreated from this callback.
 }
 
 // Notifies the app that it is being suspended.
@@ -148,6 +167,7 @@ void MechaManMain::OnSuspending()
 	// good practice to save any state that will allow the app to restart where it left off.
 
 	m_states.OnSuspending();
+	m_input.OnSuspending();
 
 	// If your application uses video memory allocations that are easy to re-create,
 	// consider releasing that memory to make it available to other applications.
@@ -158,11 +178,8 @@ void MechaManMain::OnResuming()
 {
 	std::lock_guard<std::mutex> lock(m_mutex);
 
+	m_input.OnResuming();
 	m_states.OnResuming();
-	if (auto* splash = dynamic_cast<SplashState*>(m_states.Top()))
-	{
-		splash->LoadFonts(m_deviceResources);
-	}
 }
 
 // Notifies renderers that device resources need to be released.
@@ -173,7 +190,8 @@ void MechaManMain::OnDeviceRemoved()
 	// The states keep their game data and drop everything that was created from the old device.
 	// Nothing may hold on to the old device, or the new one cannot be created.
 	m_states.ReleaseDeviceDependentResources();
-	m_sprites.ReleaseDeviceDependentResources();
+	m_graphics.text.ReleaseDeviceDependentResources();
+	m_graphics.sprites.ReleaseDeviceDependentResources();
 	m_commandList = nullptr;
 	m_deviceResources = nullptr;
 }

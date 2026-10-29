@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="Common">
@@ -56,6 +56,9 @@
     <Image Include="Assets\Square44x44Logo.targetsize-24_altform-unplated.png">
       <Filter>Assets</Filter>
     </Image>
+    <Image Include="Assets\Logo.png">
+      <Filter>Assets</Filter>
+    </Image>
     <Image Include="Assets\StoreLogo.png">
       <Filter>Assets</Filter>
     </Image>
@@ -74,6 +77,18 @@
       <Filter>Content</Filter>
     </ClCompile>
     <ClCompile Include="Content\GameStateStack.cpp">
+      <Filter>Content</Filter>
+    </ClCompile>
+    <ClCompile Include="Content\TextRenderer.cpp">
+      <Filter>Content</Filter>
+    </ClCompile>
+    <ClCompile Include="Content\TitleState.cpp">
+      <Filter>Content</Filter>
+    </ClCompile>
+    <ClCompile Include="Content\InputManager.cpp">
+      <Filter>Content</Filter>
+    </ClCompile>
+    <ClCompile Include="Content\InputTestState.cpp">
       <Filter>Content</Filter>
     </ClCompile>
     <ClCompile Include="Content\SplashState.cpp">
@@ -103,6 +118,21 @@
       <Filter>Content</Filter>
     </ClInclude>
     <ClInclude Include="Content\GameStateStack.h">
+      <Filter>Content</Filter>
+    </ClInclude>
+    <ClInclude Include="Content\Graphics.h">
+      <Filter>Content</Filter>
+    </ClInclude>
+    <ClInclude Include="Content\TextRenderer.h">
+      <Filter>Content</Filter>
+    </ClInclude>
+    <ClInclude Include="Content\TitleState.h">
+      <Filter>Content</Filter>
+    </ClInclude>
+    <ClInclude Include="Content\InputManager.h">
+      <Filter>Content</Filter>
+    </ClInclude>
+    <ClInclude Include="Content\InputTestState.h">
       <Filter>Content</Filter>
     </ClInclude>
     <ClInclude Include="Content\SplashState.h">
@@ -145,5 +175,13 @@
       <Filter>Assets\fonts</Filter>
     </None>
     <None Include="FONT_RENDERING_GUIDE.md" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Assets\Title.png">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="Assets\Tileset1.png">
+      <Filter>Assets</Filter>
+    </Image>
   </ItemGroup>
 </Project>

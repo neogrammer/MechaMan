@@ -316,6 +316,7 @@ void SpriteRenderer::CreateDeviceDependentResources(const std::shared_ptr<DX::De
 void SpriteRenderer::ReleaseDeviceDependentResources()
 {
 	m_whiteTexture = nullptr;
+	m_textureCache.clear();
 
 	for (FrameBuffer& frameBuffer : m_frameBuffers)
 	{
@@ -590,11 +591,12 @@ void SpriteRenderer::MakeRoomFor(UINT spriteCount)
 	frameBuffer.used = 0;
 }
 
-// Starts a batch in screen pixels: (0, 0) is the top-left corner of the screen.
+// Starts a batch in screen pixels: (0, 0) is the top-left corner of the game's part of the
+// screen, inside any black bars.
 void SpriteRenderer::Begin()
 {
-	Windows::Foundation::Size outputSize = m_deviceResources->GetOutputSize();
-	Begin(RectF{ 0.0f, 0.0f, outputSize.Width, outputSize.Height });
+	const D3D12_VIEWPORT viewport = m_deviceResources->GetScreenViewport();
+	Begin(RectF{ 0.0f, 0.0f, viewport.Width, viewport.Height });
 }
 
 // Starts a batch. 'view' is the rectangle of the game world that fills the screen.
@@ -644,8 +646,10 @@ void SpriteRenderer::Draw(const Sprite& sprite)
 	const float textureWidth = static_cast<float>(texture->m_width);
 	const float textureHeight = static_cast<float>(texture->m_height);
 
-	RectF source = sprite.source;
-	if (source.width == 0.0f && source.height == 0.0f)
+	RectF source = {
+		static_cast<float>(sprite.texRect.x), static_cast<float>(sprite.texRect.y),
+		static_cast<float>(sprite.texRect.width), static_cast<float>(sprite.texRect.height) };
+	if (sprite.texRect.width == 0 && sprite.texRect.height == 0)
 	{
 		source = RectF{ 0.0f, 0.0f, textureWidth, textureHeight };
 	}
@@ -797,4 +801,106 @@ void SpriteRenderer::End(ID3D12GraphicsCommandList* commandList)
 
 	m_quads.clear();
 	m_sortKeys.clear();
+}
+
+// ---- The simple way ---------------------------------------------------------------------
+
+RectF MechaMan::FitInside(UINT width, UINT height, const RectF& area, float fill)
+{
+	if (width == 0 || height == 0)
+	{
+		return RectF{ area.x + area.width * 0.5f, area.y + area.height * 0.5f, 0.0f, 0.0f };
+	}
+
+	// Scale by whichever side runs out of room first.
+	const float scaleX = area.width / static_cast<float>(width);
+	const float scaleY = area.height / static_cast<float>(height);
+	const float scale = (scaleX < scaleY ? scaleX : scaleY) * fill;
+
+	const float w = static_cast<float>(width) * scale;
+	const float h = static_cast<float>(height) * scale;
+	return RectF{ area.x + (area.width - w) * 0.5f, area.y + (area.height - h) * 0.5f, w, h };
+}
+
+void SpriteRenderer::DrawTexture(const Texture* texture, DirectX::XMFLOAT2 position, float opacity, int layer)
+{
+	if (texture == nullptr)
+	{
+		return;
+	}
+	DrawTexture(texture, RectF{ position.x, position.y, static_cast<float>(texture->GetWidth()), static_cast<float>(texture->GetHeight()) }, opacity, layer);
+}
+
+void SpriteRenderer::DrawTexture(const Texture* texture, const RectF& destination, float opacity, int layer)
+{
+	// A source of all zeros means the whole texture.
+	DrawTexture(texture, Rect{ 0, 0, 0, 0 }, destination, opacity, layer);
+}
+
+void SpriteRenderer::DrawTexture(Sprite& sprite, const RectF& destination, float opacity, int layer, bool resetTexRect)
+{
+	if (sprite.texture == nullptr)
+	{
+		return;
+	}
+	if (resetTexRect)
+	{
+		sprite.ResetTexRect();
+	}
+	if (opacity <= 0.0f)
+	{
+		return;
+	}
+
+	// The sprite's own texture, texRect and mirroring, put where the arguments say.
+	Sprite placed;
+	placed.texture = sprite.texture;
+	placed.texRect = sprite.texRect;
+	placed.flipX = sprite.flipX;
+	placed.flipY = sprite.flipY;
+	placed.position = { destination.x, destination.y };
+	placed.size = { destination.width, destination.height };
+	placed.color = { 1.0f, 1.0f, 1.0f, opacity };
+	placed.layer = layer;
+	Draw(placed);
+}
+
+void SpriteRenderer::DrawTexture(const Texture* texture, const Rect& source, const RectF& destination, float opacity, int layer)
+{
+	if (texture == nullptr || opacity <= 0.0f)
+	{
+		return;
+	}
+
+	Sprite sprite;
+	sprite.texture = texture;
+	sprite.texRect = source;
+	sprite.position = { destination.x, destination.y };
+	sprite.size = { destination.width, destination.height };
+	sprite.color = { 1.0f, 1.0f, 1.0f, opacity };
+	sprite.layer = layer;
+	Draw(sprite);
+}
+
+void SpriteRenderer::DrawRectangle(const RectF& rectangle, DirectX::XMFLOAT4 color, int layer)
+{
+	Sprite sprite;	// no texture: a plain rectangle
+	sprite.position = { rectangle.x, rectangle.y };
+	sprite.size = { rectangle.width, rectangle.height };
+	sprite.color = color;
+	sprite.layer = layer;
+	Draw(sprite);
+}
+
+std::shared_ptr<Texture> SpriteRenderer::GetTexture(const std::wstring& fileName)
+{
+	auto found = m_textureCache.find(fileName);
+	if (found != m_textureCache.end())
+	{
+		return found->second;
+	}
+
+	std::shared_ptr<Texture> texture = LoadTexture(fileName);
+	m_textureCache[fileName] = texture;
+	return texture;
 }
