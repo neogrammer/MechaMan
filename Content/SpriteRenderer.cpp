@@ -15,7 +15,7 @@ using namespace Microsoft::WRL;
 
 
 const MechaMan::RectF MechaMan::c_view = { 0.0f, 0.0f, 1280.0f, 720.0f };
-
+const FPair MechaMan::c_viewOffset = { 4.5f, 1.f };
 namespace
 {
 	

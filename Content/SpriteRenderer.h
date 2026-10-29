@@ -33,8 +33,15 @@ namespace MechaMan
 		int height;
 	};
 
-	extern const RectF c_view;
 
+	struct FPair
+	{
+		float x;
+		float y;
+	};
+
+	extern const RectF c_view;
+	extern const FPair c_viewOffset;
 	// The biggest rectangle with the proportions of a width x height image that fits inside
 	// 'area' and is centred in it. 'fill' shrinks it: 0.5 makes it half as big.
 	RectF FitInside(UINT width, UINT height, const RectF& area, float fill = 1.0f);

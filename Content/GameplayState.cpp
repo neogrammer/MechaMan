@@ -13,26 +13,26 @@ GameplayState::GameplayState(GameStateStack& stack, Graphics& graphics, InputMan
 	m_graphics(graphics),
 	m_input(input),
 	m_loaded(false),
-	m_tiles{},
-	m_tileset(nullptr)
+	m_tileset(nullptr),
+	m_tset{}
 {}
 
 void GameplayState::CreateDeviceDependentResources(const std::shared_ptr<DX::DeviceResources>&)
 {
 	// The splash screen loaded this already: GetTexture hands back the same texture.
-	if (PackageFiles::Exists(L"Assets\\Tileset1.png"))
+	if (PackageFiles::Exists(L"Assets\\tilesets\\grass_tiles.png"))
 	{
-		m_tileset = m_graphics.sprites.GetTexture(L"Assets\\Tileset1.png");
+		m_tileset = m_graphics.sprites.GetTexture(L"Assets\\tilesets\\grass_tiles.png");
 
-		// Tileset1.png is a 25 x 25 grid of cells 169 pixels square (4225 / 25), so that is
+		// grass_tiles.png is a 8 x 7 grid of cells 128 pixels square (1024 / 8), so that is
 		// the step from one tile's texRect to the next.
-		const int cellSize = 169;
+		const int cellSize = 128;
 
-		// Each tile is drawn 128 view units square. 1280 / 128 = 10 fill the view across, and
-		// 720 / 128 = 5.6, so 6 rows fill it down (the last one runs off the bottom).
+		// Each tile is drawn 128 view units square.  7 rows fill it
 		const float tileSize = 128.0f;
-		const int columns = static_cast<int>(std::ceil(c_view.width / tileSize));
-		const int rows = static_cast<int>(std::ceil(c_view.height / tileSize));
+	   
+		const int columns = static_cast<int>(std::ceil(m_tileset->GetWidth() / tileSize));
+		const int rows = static_cast<int>(std::ceil(m_tileset->GetHeight() / tileSize));
 
 		struct p
 		{
@@ -40,12 +40,17 @@ void GameplayState::CreateDeviceDependentResources(const std::shared_ptr<DX::Dev
 			float y;
 		};
 
+		m_tset.setTSet(columns, static_cast<int>(tileSize), static_cast<int>(tileSize));
+		
+
 		auto lammy = [tileSize](int x, int y, int tileW, int tileH)->p { 
 			float tempx = (x - y) * tileW / 2.f;
 			float tempy = (x + y) * tileH / 4.f;
 			p newp = p{ tempx, tempy };
 			return newp;
 			};
+
+
 
 		for (int y = 0; y < rows; ++y)
 		{
@@ -57,10 +62,11 @@ void GameplayState::CreateDeviceDependentResources(const std::shared_ptr<DX::Dev
 				tile.position = { c_view.x + x * tileSize, c_view.y + y * tileSize };
 				p iso = p{ lammy(x, y, 128, 128) };
 				tile.position = { iso.x, iso.y };
+				tile.position.x += c_viewOffset.x * tileSize;
+				tile.position.y += c_viewOffset.y * tileSize;
 				tile.size = { tileSize, tileSize };
-				m_tiles.push_back(tile);
-				
-				
+
+				m_tset.addTile(tile);				
 			}
 		}
 	}
@@ -69,8 +75,8 @@ void GameplayState::CreateDeviceDependentResources(const std::shared_ptr<DX::Dev
 
 void GameplayState::ReleaseDeviceDependentResources()
 {
+	m_tset.tiles.clear();
 	m_tileset = nullptr;
-	m_tiles.clear();
 	m_loaded = false;
 }
 
@@ -91,24 +97,17 @@ void GameplayState::Render(ID3D12GraphicsCommandList* commandList)
 	// Everything fades in out of black over half a second.
 	m_graphics.sprites.Begin(c_view);
 	m_graphics.sprites.DrawRectangle(c_view, { 0.0f, 0.0f, 0.0f, 1.0f }, -1);
-	if (m_tileset != nullptr)
-	{
-		//const RectF top = { c_view.x, c_view.y, c_view.width, c_view.height };
-		if (!m_tiles.empty())
-		{
-			for (auto& tile : m_tiles)
-			{
+	if (m_tileset != nullptr)	{	if (!m_tset.tiles.empty())	{
+			for (auto& tile : m_tset.tiles)
 				m_graphics.sprites.DrawTexture(tile.texture, tile.texRect, RectF{ tile.position.x, tile.position.y, tile.size.x, tile.size.y }, 1.f); //FitInside(1400, 900, top, 1.f), 1.f);
-			}
-		}
-	}
+	}	}
 
 	// End has to follow every Begin, even without a tileset, or the next frame's Begin
 	// finds the batch still open.
 	m_graphics.sprites.End(commandList);
 
 	// PRESS START blinks once a second.
-	m_graphics.text.Begin(commandList);
-	m_graphics.text.Draw(L"PRESS START", { c_view.x + c_view.width * 0.5f, c_view.y + c_view.height * 0.8f }, { 1.0f, 1.0f, 1.0f, 1.f }, 1.0f, true);
-	m_graphics.text.End();
+	//m_graphics.text.Begin(commandList);
+	//m_graphics.text.Draw(L"PRESS START", { c_view.x + c_view.width * 0.5f, c_view.y + c_view.height * 0.8f }, { 1.0f, 1.0f, 1.0f, 1.f }, 1.0f, true);
+	//m_graphics.text.End();
 }

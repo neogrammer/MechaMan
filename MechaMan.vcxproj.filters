@@ -68,6 +68,9 @@
     <Filter Include="Assets\fonts">
       <UniqueIdentifier>{ad7def79-c8a0-4efd-82ce-fcb28f6af352}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Tilemaps">
+      <UniqueIdentifier>{37d530f5-9c0f-40cd-b7c9-07927c2d4472}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="App.cpp" />
@@ -105,6 +108,15 @@
     </ClCompile>
     <ClCompile Include="Content\CidSprite.cpp">
       <Filter>Content</Filter>
+    </ClCompile>
+    <ClCompile Include="Tilemaps\Tile.cpp">
+      <Filter>Tilemaps</Filter>
+    </ClCompile>
+    <ClCompile Include="Tilemaps\Tilemap.cpp">
+      <Filter>Tilemaps</Filter>
+    </ClCompile>
+    <ClCompile Include="Tilemaps\Tileset.cpp">
+      <Filter>Tilemaps</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -156,6 +168,15 @@
     <ClInclude Include="Content\TexID.h">
       <Filter>Content</Filter>
     </ClInclude>
+    <ClInclude Include="Tilemaps\Tile.h">
+      <Filter>Tilemaps</Filter>
+    </ClInclude>
+    <ClInclude Include="Tilemaps\Tilemap.h">
+      <Filter>Tilemaps</Filter>
+    </ClInclude>
+    <ClInclude Include="Tilemaps\Tileset.h">
+      <Filter>Tilemaps</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <AppxManifest Include="Package.appxmanifest" />
@@ -181,6 +202,9 @@
       <Filter>Assets</Filter>
     </Image>
     <Image Include="Assets\Tileset1.png">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="Assets\tilesets\grass_tiles.png">
       <Filter>Assets</Filter>
     </Image>
   </ItemGroup>

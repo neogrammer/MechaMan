@@ -200,6 +200,7 @@
     <Image Include="Assets\Logo.png" />
     <Image Include="Assets\StoreLogo.png" />
     <Image Include="Assets\Tileset1.png" />
+    <Image Include="Assets\tilesets\grass_tiles.png" />
     <Image Include="Assets\Title.png" />
     <Image Include="Assets\Wide310x150Logo.scale-200.png" />
   </ItemGroup>
@@ -228,6 +229,9 @@
     <ClInclude Include="Content\Sample3DSceneRenderer.h" />
     <ClInclude Include="Content\ShaderStructures.h" />
     <ClInclude Include="pch.h" />
+    <ClInclude Include="Tilemaps\Tile.h" />
+    <ClInclude Include="Tilemaps\Tilemap.h" />
+    <ClInclude Include="Tilemaps\Tileset.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="App.cpp" />
@@ -253,6 +257,9 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="Tilemaps\Tile.cpp" />
+    <ClCompile Include="Tilemaps\Tilemap.cpp" />
+    <ClCompile Include="Tilemaps\Tileset.cpp" />
   </ItemGroup>
   <ItemGroup>
     <AppxManifest Include="Package.appxmanifest">
