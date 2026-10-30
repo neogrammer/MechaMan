@@ -3,7 +3,7 @@
 #include "GameStateStack.h"
 #include "Graphics.h"
 #include "InputManager.h"
-#include "../Tilemaps/Tileset.h"
+#include "../Tilemaps/Tilemap.h"
 
 namespace MechaMan
 {
@@ -30,7 +30,7 @@ namespace MechaMan
 		InputManager& m_input;
 
 		// GPU objects.
-		Tileset m_tset{};
+		Tilemap m_tmap{};
 		std::shared_ptr<Texture>	m_tileset;
 		
 

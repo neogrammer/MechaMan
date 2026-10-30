@@ -40,8 +40,8 @@ void CidSprite::Create(std::shared_ptr<Texture> tex, float speed, float directio
 
 	auto wd = m_texture->GetWidth();
 	auto ht = m_texture->GetHeight();
-	RECT rW = { 0, 0, wd, ht };
-	RECT rT = { 0, 0, wd, ht };
+	RECT rW = { (LONG)0, (LONG)0, (LONG)wd, (LONG)ht };
+	RECT rT = { 0L, 0L, (LONG)wd, (LONG)ht };
 
 	Create(rW, rT, speed, direction);
 }
@@ -57,8 +57,8 @@ CidSprite::CidSprite(std::shared_ptr<Texture> tex)
 {
 	auto wd = m_texture->GetWidth();
 	auto ht =m_texture->GetHeight();
-	RECT rW = { 0, 0, wd, ht };
-	RECT rT = { 0, 0, wd, ht };
+	RECT rW = { (LONG)0,(LONG)0, (LONG)wd, (LONG)ht };
+	RECT rT = { (LONG)0, (LONG)0, (LONG)wd, (LONG)ht };
 
 	Create(rW, rT, 300.f, 0.f);
 }
@@ -70,8 +70,8 @@ CidSprite::CidSprite(SpriteRenderer* rend, std::shared_ptr<Texture> tex)
 
  auto wd = m_texture->GetWidth();
  auto ht = m_texture->GetHeight();
- RECT rW = { 0, 0, wd, ht };
- RECT rT = { 0, 0, wd, ht };
+ RECT rW = { (LONG)0, (LONG)0, (LONG)wd, (LONG)ht };
+ RECT rT = { (LONG)0, (LONG)0,(LONG)wd, (LONG)ht };
 
  Create(rW, rT, 300.f, 0.f);
 }

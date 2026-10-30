@@ -1,23 +1,26 @@
 #include "pch.h"
 #include "Tileset.h"
 
-void MechaMan::Tileset::addTile(Sprite& tile)
+void MechaMan::Tileset::addTile(const Tile& tile)
 {
-	tiles.push_back(Sprite{});
-	Sprite& t = tiles[tiles.size() - 1];
-	t.texture = tile.texture;
-	t.texRect = tile.texRect;
-	t.flipX = tile.flipX;
-	t.flipY = tile.flipY;
-	t.position = tile.position;
-	t.size = tile.size;
-	t.layer = tile.layer;
-	t.rotation = tile.rotation;
+	tiles.push_back(Tile{});
+	Tile& t = tiles[tiles.size() - 1];
+	Sprite temp{};
+	temp.color = tile.spr.color;
+	temp.flipX = tile.spr.flipX;
+	temp.flipY = tile.spr.flipY;
+	temp.layer = tile.spr.layer;
+	temp.origin = tile.spr.origin;
+	temp.position = tile.spr.position;
+	temp.rotation = tile.spr.rotation;
+	temp.size = tile.spr.size;
+	temp.texRect = tile.spr.texRect;
+	temp.texture = tile.spr.texture;
+
+	t.setSprite(temp);
 }
 
-void MechaMan::Tileset::setTSet(int pitch_, int width_, int height_)
+void MechaMan::Tileset::setTSet(int pitch_)
 {
 	pitch = pitch_; 
-	tw = width_; 
-	th = height_;
 }

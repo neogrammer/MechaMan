@@ -177,6 +177,12 @@
     <ClInclude Include="Tilemaps\Tileset.h">
       <Filter>Tilemaps</Filter>
     </ClInclude>
+    <ClInclude Include="Content\Rect.h">
+      <Filter>Content</Filter>
+    </ClInclude>
+    <ClInclude Include="Content\PairF.h">
+      <Filter>Content</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <AppxManifest Include="Package.appxmanifest" />

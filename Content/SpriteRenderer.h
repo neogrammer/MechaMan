@@ -7,19 +7,13 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include "Rect.h"
 
 namespace MechaMan
 {
 	class SpriteTextureHeap;
 
-	// A rectangle: where its top-left corner is, and how big it is.
-	struct RectF
-	{
-		float x;
-		float y;
-		float width;
-		float height;
-	};
+
 
 	// The same in whole pixels, for the part of a texture to draw from. A texture's pixels sit
 	// at whole positions, so unlike a place on screen there is nothing in between them.

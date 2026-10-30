@@ -5,6 +5,7 @@
 #include "PackageFiles.h"
 
 #include <cmath>
+#include "PairF.h"
 
 using namespace MechaMan;
 
@@ -14,11 +15,15 @@ GameplayState::GameplayState(GameStateStack& stack, Graphics& graphics, InputMan
 	m_input(input),
 	m_loaded(false),
 	m_tileset(nullptr),
-	m_tset{}
+	m_tmap{}
 {}
 
 void GameplayState::CreateDeviceDependentResources(const std::shared_ptr<DX::DeviceResources>&)
 {
+
+
+
+
 	// The splash screen loaded this already: GetTexture hands back the same texture.
 	if (PackageFiles::Exists(L"Assets\\tilesets\\grass_tiles.png"))
 	{
@@ -34,21 +39,61 @@ void GameplayState::CreateDeviceDependentResources(const std::shared_ptr<DX::Dev
 		const int columns = static_cast<int>(std::ceil(m_tileset->GetWidth() / tileSize));
 		const int rows = static_cast<int>(std::ceil(m_tileset->GetHeight() / tileSize));
 
-		struct p
-		{
-			float x;
-			float y;
-		};
-
-		m_tset.setTSet(columns, static_cast<int>(tileSize), static_cast<int>(tileSize));
-		
-
-		auto lammy = [tileSize](int x, int y, int tileW, int tileH)->p { 
+		auto lammy = [tileSize](int x, int y, int tileW, int tileH)->PairF {
 			float tempx = (x - y) * tileW / 2.f;
 			float tempy = (x + y) * tileH / 4.f;
-			p newp = p{ tempx, tempy };
+			PairF newp = PairF{ tempx, tempy };
 			return newp;
 			};
+
+
+		Tileset t{};
+		t.tiles.reserve(7 * 8);
+		for (int y = 0; y < 7; y++)
+		{
+			for (int x = 0; x < 8; x++)
+			{
+				t.tiles.push_back(Tile{});
+				Sprite temp{};
+				temp.texture = m_tileset.get();
+				temp.SetTexRect({  x * (int)tileSize , y * (int)tileSize, (int)tileSize, (int)tileSize });
+				temp.color = { 1.0f, 1.0f, 1.0f, 1.0f };
+				temp.flipX = false;
+				temp.flipY = false;
+				temp.layer = 0;
+				temp.origin = { 0.0f, 0.0f };
+				temp.position = { (float)x * tileSize, (float)y * tileSize };
+				temp.rotation = 0.0f;
+				temp.size = { tileSize, tileSize };
+			
+				t.tiles.back().setSprite(temp);
+			}
+
+		}
+		int* map = new int[20 * 20]{
+				 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+				 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+				 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+				 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+				 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+				 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+				 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+				 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+				 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+				 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+				 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+				 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+				 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+				 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+				 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+				 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+				 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+				 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+				 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
+
+		m_tmap.setup(t.tiles, 20, 20, 0, 8, map);
+	
+
 
 
 
@@ -60,13 +105,14 @@ void GameplayState::CreateDeviceDependentResources(const std::shared_ptr<DX::Dev
 				tile.texture = m_tileset.get();
 				tile.SetTexRect({ x * cellSize, y * cellSize, cellSize, cellSize });
 				tile.position = { c_view.x + x * tileSize, c_view.y + y * tileSize };
-				p iso = p{ lammy(x, y, 128, 128) };
+				PairF iso = PairF{ lammy(x, y, 128, 128) };
 				tile.position = { iso.x, iso.y };
 				tile.position.x += c_viewOffset.x * tileSize;
 				tile.position.y += c_viewOffset.y * tileSize;
 				tile.size = { tileSize, tileSize };
-
-				m_tset.addTile(tile);				
+				Tile temp{};
+				temp.setSprite(tile);
+				m_tmap.getTSet().addTile(temp);
 			}
 		}
 	}
@@ -75,7 +121,7 @@ void GameplayState::CreateDeviceDependentResources(const std::shared_ptr<DX::Dev
 
 void GameplayState::ReleaseDeviceDependentResources()
 {
-	m_tset.tiles.clear();
+	m_tmap.getTSet().tiles.clear();
 	m_tileset = nullptr;
 	m_loaded = false;
 }
@@ -97,9 +143,9 @@ void GameplayState::Render(ID3D12GraphicsCommandList* commandList)
 	// Everything fades in out of black over half a second.
 	m_graphics.sprites.Begin(c_view);
 	m_graphics.sprites.DrawRectangle(c_view, { 0.0f, 0.0f, 0.0f, 1.0f }, -1);
-	if (m_tileset != nullptr)	{	if (!m_tset.tiles.empty())	{
-			for (auto& tile : m_tset.tiles)
-				m_graphics.sprites.DrawTexture(tile.texture, tile.texRect, RectF{ tile.position.x, tile.position.y, tile.size.x, tile.size.y }, 1.f); //FitInside(1400, 900, top, 1.f), 1.f);
+	if (m_tileset != nullptr)	{	if (!m_tmap.getTSet().tiles.empty())	{
+			for (auto& tile : m_tmap.getTiles())
+				m_graphics.sprites.DrawTexture(tile.spr.texture, tile.spr.texRect, RectF{ tile.spr.position.x + (c_viewOffset.x * tile.tw()), tile.spr.position.y + (c_viewOffset.y * tile.th()), tile.spr.size.x, tile.spr.size.y}, 1.f); //FitInside(1400, 900, top, 1.f), 1.f);
 	}	}
 
 	// End has to follow every Begin, even without a tileset, or the next frame's Begin

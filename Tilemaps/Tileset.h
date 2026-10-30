@@ -1,7 +1,7 @@
 #pragma once
 #include "../Content/SpriteRenderer.h"
 #include <vector>
-
+#include "Tile.h"
 namespace MechaMan
 {
 	struct Tileset
@@ -9,14 +9,13 @@ namespace MechaMan
 		
 		int pitch{};
 
-		int tw{};
-		int th{};
+		std::vector<Tile> tiles{};
 
-		std::vector<Sprite> tiles{};
-
-		void addTile(Sprite& tile);
-		void setTSet(int pitch_, int width_, int height_); 
-
+		void addTile(const Tile& tile_);
+		void setTSet(int pitch_); 
+		
+		inline int tw(int index) { return tiles[0].tw(); }
+		inline int th(int index) { return tiles[0].th(); }
 
 	};
 }
