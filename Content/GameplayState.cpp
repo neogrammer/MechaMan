@@ -136,24 +136,38 @@ void GameplayState::Update(DX::StepTimer const& timer)
 		// the input test screen goes on top, and pops itself to come back here.
 		m_stack.Push(std::make_unique<InputTestState>(m_stack, m_graphics, m_input));
 	}
+	const float dt = static_cast<float>(timer.GetElapsedSeconds());
+	const float speed = 600.0f;	// world units per second
+	if (m_input.IsDown(Action::Right)) { m_camera.x += speed * dt; }
+	if (m_input.IsDown(Action::Left)) { m_camera.x -= speed * dt; }
+	if (m_input.IsDown(Action::Down)) { m_camera.y += speed * dt; }
+	if (m_input.IsDown(Action::Up)) { m_camera.y -= speed * dt; }
+	
 }
 
 void GameplayState::Render(ID3D12GraphicsCommandList* commandList)
 {
 	// Everything fades in out of black over half a second.
-	m_graphics.sprites.Begin(c_view);
-	m_graphics.sprites.DrawRectangle(c_view, { 0.0f, 0.0f, 0.0f, 1.0f }, -1);
+	const RectF view = { std::floor(m_camera.x), std::floor(m_camera.y), c_view.width, c_view.height };
+	m_graphics.sprites.Begin(view);
+	m_graphics.sprites.DrawRectangle(view, { 0.0f, 0.0f, 0.0f, 1.0f }, -1);
 	if (m_tileset != nullptr)	{	if (!m_tmap.getTSet().tiles.empty())	{
 			for (auto& tile : m_tmap.getTiles())
 				m_graphics.sprites.DrawTexture(tile.spr.texture, tile.spr.texRect, RectF{ tile.spr.position.x + (c_viewOffset.x * tile.tw()), tile.spr.position.y + (c_viewOffset.y * tile.th()), tile.spr.size.x, tile.spr.size.y}, 1.f); //FitInside(1400, 900, top, 1.f), 1.f);
 	}	}
+	m_graphics.sprites.End(commandList);
+
 
 	// End has to follow every Begin, even without a tileset, or the next frame's Begin
 	// finds the batch still open.
+	// screen space stuff
+	m_graphics.sprites.Begin(c_view);
+	// HUD
+
 	m_graphics.sprites.End(commandList);
 
 	// PRESS START blinks once a second.
-	//m_graphics.text.Begin(commandList);
-	//m_graphics.text.Draw(L"PRESS START", { c_view.x + c_view.width * 0.5f, c_view.y + c_view.height * 0.8f }, { 1.0f, 1.0f, 1.0f, 1.f }, 1.0f, true);
-	//m_graphics.text.End();
+	m_graphics.text.Begin(commandList, c_view);
+	m_graphics.text.Draw(L"PRESS START", { c_view.x + c_view.width * 0.5f, c_view.y + c_view.height * 0.8f }, { 1.0f, 1.0f, 1.0f, 1.f }, 1.0f, true);
+	m_graphics.text.End();
 }

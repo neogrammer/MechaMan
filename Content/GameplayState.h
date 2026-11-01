@@ -36,6 +36,8 @@ namespace MechaMan
 
 		bool						m_loaded;
 
+
+		DirectX::XMFLOAT2 m_camera = { 0.0f, 0.0f };	// top-left corner of the screen, in world units
 	};
 }
 
