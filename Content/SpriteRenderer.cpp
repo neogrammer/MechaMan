@@ -32,17 +32,34 @@ namespace
 	// Root signature slots.
 	const UINT c_rootViewProjection = 0;
 	const UINT c_rootTexture = 1;
+	const UINT c_rootFilter = 2;		// 0: crisp pixels, 1: smoothed (Sprite::smooth)
 
-	// What a sort key is made of, most significant first: layer, texture, order added.
+	// What a sort key is made of, most significant first: layer, run, order added. A run is
+	// the sprites that can be drawn with one draw call: the same texture, filtered the same way.
 	const int c_minLayer = -32768;
 	const int c_maxLayer = 32767;
 
-	uint64_t MakeSortKey(int layer, UINT textureSlot, size_t order)
+	UINT MakeRun(UINT textureSlot, bool smooth)
 	{
-		return (static_cast<uint64_t>(layer - c_minLayer) << 48) | (static_cast<uint64_t>(textureSlot) << 32) | static_cast<uint64_t>(order);
+		return textureSlot * 2 + (smooth ? 1 : 0);
 	}
 
-	UINT TextureSlotOf(uint64_t sortKey)
+	UINT TextureSlotOfRun(UINT run)
+	{
+		return run / 2;
+	}
+
+	UINT SmoothOfRun(UINT run)
+	{
+		return run % 2;
+	}
+
+	uint64_t MakeSortKey(int layer, UINT run, size_t order)
+	{
+		return (static_cast<uint64_t>(layer - c_minLayer) << 48) | (static_cast<uint64_t>(run) << 32) | static_cast<uint64_t>(order);
+	}
+
+	UINT RunOf(uint64_t sortKey)
 	{
 		return static_cast<UINT>((sortKey >> 32) & 0xFFFF);
 	}
@@ -345,32 +362,37 @@ void SpriteRenderer::CreatePipeline()
 {
 	auto d3dDevice = m_deviceResources->GetD3DDevice();
 
-	// Create a root signature with the view matrix for the vertex shader, and one texture
-	// and a sampler for the pixel shader.
+	// Create a root signature with the view matrix for the vertex shader, and one texture,
+	// which filter to use and the two samplers for the pixel shader.
 	{
 		CD3DX12_DESCRIPTOR_RANGE textureRange;
 		textureRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
 
-		CD3DX12_ROOT_PARAMETER parameters[2];
+		CD3DX12_ROOT_PARAMETER parameters[3];
 		parameters[c_rootViewProjection].InitAsConstants(16, 0, 0, D3D12_SHADER_VISIBILITY_VERTEX);
 		parameters[c_rootTexture].InitAsDescriptorTable(1, &textureRange, D3D12_SHADER_VISIBILITY_PIXEL);
+		parameters[c_rootFilter].InitAsConstants(1, 1, 0, D3D12_SHADER_VISIBILITY_PIXEL);
 
-		// Point sampling keeps pixel art sharp when it is scaled up.
-		// For smooth scaling instead, use D3D12_FILTER_MIN_MAG_MIP_LINEAR.
-		D3D12_STATIC_SAMPLER_DESC sampler = {};
-		sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
-		sampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-		sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-		sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-		sampler.MipLODBias = 0.0f;
-		sampler.MaxAnisotropy = 1;
-		sampler.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
-		sampler.BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
-		sampler.MinLOD = 0.0f;
-		sampler.MaxLOD = D3D12_FLOAT32_MAX;
-		sampler.ShaderRegister = 0;
-		sampler.RegisterSpace = 0;
-		sampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+		// Point sampling (s0) keeps pixel art sharp when it is scaled up. Linear sampling (s1)
+		// smooths it instead, for sprites that ask for it (Sprite::smooth).
+		D3D12_STATIC_SAMPLER_DESC samplers[2] = {};
+		for (UINT i = 0; i < 2; i++)
+		{
+			D3D12_STATIC_SAMPLER_DESC& sampler = samplers[i];
+			sampler.Filter = i == 0 ? D3D12_FILTER_MIN_MAG_MIP_POINT : D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+			sampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+			sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+			sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+			sampler.MipLODBias = 0.0f;
+			sampler.MaxAnisotropy = 1;
+			sampler.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
+			sampler.BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
+			sampler.MinLOD = 0.0f;
+			sampler.MaxLOD = D3D12_FLOAT32_MAX;
+			sampler.ShaderRegister = i;
+			sampler.RegisterSpace = 0;
+			sampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+		}
 
 		D3D12_ROOT_SIGNATURE_FLAGS rootSignatureFlags =
 			D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
@@ -379,7 +401,7 @@ void SpriteRenderer::CreatePipeline()
 			D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS;
 
 		CD3DX12_ROOT_SIGNATURE_DESC descRootSignature;
-		descRootSignature.Init(_countof(parameters), parameters, 1, &sampler, rootSignatureFlags);
+		descRootSignature.Init(_countof(parameters), parameters, _countof(samplers), samplers, rootSignatureFlags);
 
 		ComPtr<ID3DBlob> pSignature;
 		ComPtr<ID3DBlob> pError;
@@ -659,6 +681,19 @@ void SpriteRenderer::Draw(const Sprite& sprite)
 	float top = source.y / textureHeight;
 	float bottom = (source.y + source.height) / textureHeight;
 
+	// Smoothing blends each pixel with its neighbours, and on a sheet the neighbours past the
+	// edge of a frame belong to the next frame. Keeping half a pixel in from every edge keeps
+	// them out.
+	if (sprite.smooth)
+	{
+		const float insetU = 0.5f / textureWidth;
+		const float insetV = 0.5f / textureHeight;
+		left += insetU;
+		right -= insetU;
+		top += insetV;
+		bottom -= insetV;
+	}
+
 	if (sprite.flipX)
 	{
 		std::swap(left, right);
@@ -716,7 +751,7 @@ void SpriteRenderer::Draw(const Sprite& sprite)
 		layer = c_maxLayer;
 	}
 
-	m_sortKeys.push_back(MakeSortKey(layer, texture->m_slot, m_quads.size()));
+	m_sortKeys.push_back(MakeSortKey(layer, MakeRun(texture->m_slot, sprite.smooth), m_quads.size()));
 	m_quads.push_back(quad);
 }
 
@@ -765,19 +800,20 @@ void SpriteRenderer::End(ID3D12GraphicsCommandList* commandList)
 		commandList->IASetVertexBuffers(0, 1, &vertexBufferView);
 		commandList->IASetIndexBuffer(&m_indexBufferView);
 
-		// One draw call for each run of sprites that share a texture.
+		// One draw call for each run of sprites that share a texture and a filter.
 		UINT runStart = 0;
 		while (runStart < spriteCount)
 		{
-			const UINT textureSlot = TextureSlotOf(m_sortKeys[runStart]);
+			const UINT run = RunOf(m_sortKeys[runStart]);
 
 			UINT runEnd = runStart + 1;
-			while (runEnd < spriteCount && TextureSlotOf(m_sortKeys[runEnd]) == textureSlot)
+			while (runEnd < spriteCount && RunOf(m_sortKeys[runEnd]) == run)
 			{
 				runEnd++;
 			}
 
-			commandList->SetGraphicsRootDescriptorTable(c_rootTexture, m_textureHeap->GetGpuHandle(textureSlot));
+			commandList->SetGraphicsRootDescriptorTable(c_rootTexture, m_textureHeap->GetGpuHandle(TextureSlotOfRun(run)));
+			commandList->SetGraphicsRoot32BitConstant(c_rootFilter, SmoothOfRun(run), 0);
 
 			// A very long run is split, because the index buffer only reaches so far.
 			for (UINT start = runStart; start < runEnd; start += c_maxSpritesPerDraw)

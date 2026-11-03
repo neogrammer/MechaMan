@@ -42,6 +42,11 @@ namespace
 		{ Action::Back,		Keyboard::Keys::Back },		// Backspace
 		{ Action::Start,	Keyboard::Keys::Enter },
 		{ Action::Start,	Keyboard::Keys::Escape },
+		{ Action::Map,		Keyboard::Keys::M },
+		{ Action::Map,		Keyboard::Keys::Tab },
+		{ Action::Dash,		Keyboard::Keys::LeftShift },
+		{ Action::Dash,		Keyboard::Keys::C },
+		{ Action::Dash,		Keyboard::Keys::L },
 	};
 
 	// Which controller buttons do what. A button is named by the GamePad::State function that
@@ -75,6 +80,9 @@ namespace
 		{ Action::Confirm,	&GamePad::State::IsAPressed },
 		{ Action::Back,		&GamePad::State::IsBPressed },
 		{ Action::Start,	&GamePad::State::IsMenuPressed },	// the small button with three lines
+		{ Action::Map,		&GamePad::State::IsViewPressed },	// the small button with two squares
+		{ Action::Dash,		&GamePad::State::IsRightShoulderPressed },	// RB
+		{ Action::Dash,		&GamePad::State::IsRightTriggerPressed },	// RT
 	};
 
 	size_t Index(Action action)

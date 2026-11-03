@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -192,8 +192,19 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <Image Include="Assets\backgrounds\chill.png" />
+    <Image Include="Assets\backgrounds\dillo.png" />
+    <Image Include="Assets\backgrounds\flame.png" />
+    <Image Include="Assets\backgrounds\flame_out.png" />
+    <Image Include="Assets\backgrounds\intro.png" />
+    <Image Include="Assets\backgrounds\vertical.png" />
     <Image Include="Assets\LockScreenLogo.scale-200.png" />
     <Image Include="Assets\SplashScreen.scale-200.png" />
+    <Image Include="Assets\Sprite sheets\enemies\bat_fixed.png" />
+    <Image Include="Assets\Sprite sheets\enemies\bee1_fixed.png" />
+    <Image Include="Assets\Sprite sheets\enemies\bee2_fixed.png" />
+    <Image Include="Assets\Sprite sheets\enemies\elecmissle_fixed.png" />
+    <Image Include="Assets\Sprite sheets\enemies\rider_fixed.png" />
     <Image Include="Assets\Square150x150Logo.scale-200.png" />
     <Image Include="Assets\Square44x44Logo.scale-200.png" />
     <Image Include="Assets\Square44x44Logo.targetsize-24_altform-unplated.png" />
@@ -202,6 +213,7 @@
     <Image Include="Assets\Tileset1.png" />
     <Image Include="Assets\tilesets\grass_tiles.png" />
     <Image Include="Assets\Title.png" />
+    <Image Include="Assets\alucard_fixed.png" />
     <Image Include="Assets\Wide310x150Logo.scale-200.png" />
   </ItemGroup>
   <ItemGroup>
@@ -214,6 +226,18 @@
     <ClInclude Include="Content\GameState.h" />
     <ClInclude Include="Content\GameStateStack.h" />
     <ClInclude Include="Content\PackageFiles.h" />
+    <ClInclude Include="Content\AnimationData.h" />
+    <ClInclude Include="Content\SpriteSheet.h" />
+    <ClInclude Include="Content\Behavior.h" />
+    <ClInclude Include="Content\States.h" />
+    <ClInclude Include="Content\Actor.h" />
+    <ClInclude Include="Content\World.h" />
+    <ClInclude Include="Content\Stage.h" />
+    <ClInclude Include="Content\ActorDemoState.h" />
+    <ClInclude Include="Content\Background.h" />
+    <ClInclude Include="Content\Scene.h" />
+    <ClInclude Include="Content\ExplorationMap.h" />
+    <ClInclude Include="Content\DamageNumbers.h" />
     <ClInclude Include="Content\Graphics.h" />
     <ClInclude Include="Content\InputManager.h" />
     <ClInclude Include="Content\InputTestState.h" />
@@ -242,6 +266,17 @@
     <ClCompile Include="Content\GameplayState.cpp" />
     <ClCompile Include="Content\GameStateStack.cpp" />
     <ClCompile Include="Content\InputManager.cpp" />
+    <ClCompile Include="Content\SpriteSheet.cpp" />
+    <ClCompile Include="Content\States.cpp" />
+    <ClCompile Include="Content\Actor.cpp" />
+    <ClCompile Include="Content\World.cpp" />
+    <ClCompile Include="Content\Stage.cpp" />
+    <ClCompile Include="Content\EnemyStates.cpp" />
+    <ClCompile Include="Content\ActorDemoState.cpp" />
+    <ClCompile Include="Content\Background.cpp" />
+    <ClCompile Include="Content\Scene.cpp" />
+    <ClCompile Include="Content\ExplorationMap.cpp" />
+    <ClCompile Include="Content\DamageNumbers.cpp" />
     <ClCompile Include="Content\InputTestState.cpp" />
     <ClCompile Include="Content\PackageFiles.cpp" />
     <ClCompile Include="Content\SplashState.cpp" />
@@ -293,6 +328,24 @@
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
+    <None Include="Assets\cfg\bat.cfg">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="Assets\cfg\bee1.cfg">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="Assets\cfg\bee2.cfg">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="Assets\cfg\elecmissle.cfg">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="Assets\cfg\rider.cfg">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="Assets\cfg\intro_stage.cfg">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
     <None Include="fonts\myfile.spritefont">
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</DeploymentContent>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</DeploymentContent>
@@ -301,7 +354,16 @@
     <None Include="FONT_RENDERING_GUIDE.md" />
     <None Include="MechaMan_TemporaryKey.pfx" />
     <None Include="packages.config" />
+    <None Include="Assets\alucard.cfg">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
   </ItemGroup>
+  <!-- C++17 for every configuration (std::optional, std::variant). C++/CX does not support C++20. -->
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+    </ClCompile>
+  </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
     <Import Project="$(VSINSTALLDIR)\Common7\IDE\Extensions\Microsoft\VsGraphics\ImageContentTask.targets" />

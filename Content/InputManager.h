@@ -29,6 +29,8 @@ namespace MechaMan
 		Confirm,	// choose a menu item
 		Back,		// leave a menu
 		Start,		// pause, and PRESS START
+		Map,		// open and close the map
+		Dash,		// Mega Man X's dash
 		Count		// not an action: the number of actions above it
 	};
 

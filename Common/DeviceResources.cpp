@@ -521,6 +521,12 @@ void DX::DeviceResources::Present()
 		DX::ThrowIfFailed(hr);
 
 		MoveToNextFrame();
+
+		// DirectXTK hands out memory for each frame's drawing (the text renderer's SpriteBatch
+		// takes its vertices and constants from it) and only takes it back once told the frame
+		// is done. Without this, every frame's text stays allocated for good, and after a minute
+		// or so of play the game runs out of memory and freezes.
+		m_graphicsMemory->Commit(m_commandQueue.Get());
 	}
 }
 

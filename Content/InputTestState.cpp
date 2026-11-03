@@ -20,6 +20,8 @@ namespace
 		L"CONFIRM",
 		L"BACK",
 		L"START",
+		L"MAP",
+		L"DASH",
 	};
 	static_assert(_countof(c_actionNames) == c_actionCount, "Every action needs a name here, in the same order as the Action enum.");
 

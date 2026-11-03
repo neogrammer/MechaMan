@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="Common">
@@ -91,6 +91,39 @@
     <ClCompile Include="Content\InputManager.cpp">
       <Filter>Content</Filter>
     </ClCompile>
+    <ClCompile Include="Content\SpriteSheet.cpp">
+      <Filter>Content</Filter>
+    </ClCompile>
+    <ClCompile Include="Content\States.cpp">
+      <Filter>Content</Filter>
+    </ClCompile>
+    <ClCompile Include="Content\Actor.cpp">
+      <Filter>Content</Filter>
+    </ClCompile>
+    <ClCompile Include="Content\World.cpp">
+      <Filter>Content</Filter>
+    </ClCompile>
+    <ClCompile Include="Content\Stage.cpp">
+      <Filter>Content</Filter>
+    </ClCompile>
+    <ClCompile Include="Content\EnemyStates.cpp">
+      <Filter>Content</Filter>
+    </ClCompile>
+    <ClCompile Include="Content\ActorDemoState.cpp">
+      <Filter>Content</Filter>
+    </ClCompile>
+    <ClCompile Include="Content\Background.cpp">
+      <Filter>Content</Filter>
+    </ClCompile>
+    <ClCompile Include="Content\Scene.cpp">
+      <Filter>Content</Filter>
+    </ClCompile>
+    <ClCompile Include="Content\ExplorationMap.cpp">
+      <Filter>Content</Filter>
+    </ClCompile>
+    <ClCompile Include="Content\DamageNumbers.cpp">
+      <Filter>Content</Filter>
+    </ClCompile>
     <ClCompile Include="Content\InputTestState.cpp">
       <Filter>Content</Filter>
     </ClCompile>
@@ -142,6 +175,42 @@
       <Filter>Content</Filter>
     </ClInclude>
     <ClInclude Include="Content\InputManager.h">
+      <Filter>Content</Filter>
+    </ClInclude>
+    <ClInclude Include="Content\AnimationData.h">
+      <Filter>Content</Filter>
+    </ClInclude>
+    <ClInclude Include="Content\SpriteSheet.h">
+      <Filter>Content</Filter>
+    </ClInclude>
+    <ClInclude Include="Content\Behavior.h">
+      <Filter>Content</Filter>
+    </ClInclude>
+    <ClInclude Include="Content\States.h">
+      <Filter>Content</Filter>
+    </ClInclude>
+    <ClInclude Include="Content\Actor.h">
+      <Filter>Content</Filter>
+    </ClInclude>
+    <ClInclude Include="Content\World.h">
+      <Filter>Content</Filter>
+    </ClInclude>
+    <ClInclude Include="Content\Stage.h">
+      <Filter>Content</Filter>
+    </ClInclude>
+    <ClInclude Include="Content\ActorDemoState.h">
+      <Filter>Content</Filter>
+    </ClInclude>
+    <ClInclude Include="Content\Background.h">
+      <Filter>Content</Filter>
+    </ClInclude>
+    <ClInclude Include="Content\Scene.h">
+      <Filter>Content</Filter>
+    </ClInclude>
+    <ClInclude Include="Content\ExplorationMap.h">
+      <Filter>Content</Filter>
+    </ClInclude>
+    <ClInclude Include="Content\DamageNumbers.h">
       <Filter>Content</Filter>
     </ClInclude>
     <ClInclude Include="Content\InputTestState.h">
@@ -202,9 +271,66 @@
       <Filter>Assets\fonts</Filter>
     </None>
     <None Include="FONT_RENDERING_GUIDE.md" />
+    <None Include="Assets\alucard.cfg">
+      <Filter>Assets</Filter>
+    </None>
+    <None Include="Assets\cfg\bat.cfg">
+      <Filter>Assets</Filter>
+    </None>
+    <None Include="Assets\cfg\bee1.cfg">
+      <Filter>Assets</Filter>
+    </None>
+    <None Include="Assets\cfg\bee2.cfg">
+      <Filter>Assets</Filter>
+    </None>
+    <None Include="Assets\cfg\elecmissle.cfg">
+      <Filter>Assets</Filter>
+    </None>
+    <None Include="Assets\cfg\rider.cfg">
+      <Filter>Assets</Filter>
+    </None>
+    <None Include="Assets\cfg\intro_stage.cfg">
+      <Filter>Assets</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="Assets\Title.png">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="Assets\alucard_fixed.png">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="Assets\backgrounds\chill.png">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="Assets\backgrounds\dillo.png">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="Assets\backgrounds\flame.png">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="Assets\backgrounds\flame_out.png">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="Assets\backgrounds\intro.png">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="Assets\backgrounds\vertical.png">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="Assets\Sprite sheets\enemies\bat_fixed.png">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="Assets\Sprite sheets\enemies\bee1_fixed.png">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="Assets\Sprite sheets\enemies\bee2_fixed.png">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="Assets\Sprite sheets\enemies\elecmissle_fixed.png">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="Assets\Sprite sheets\enemies\rider_fixed.png">
       <Filter>Assets</Filter>
     </Image>
     <Image Include="Assets\Tileset1.png">

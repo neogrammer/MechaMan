@@ -110,6 +110,10 @@ namespace MechaMan
 		bool				flipX = false;
 		bool				flipY = false;
 
+		// Smoothed (linear filtering) instead of drawn as sharp pixels. For pixel art drawn at
+		// a size that is not a whole number of its pixels, where sharp pixels look uneven.
+		bool				smooth = false;
+
 		// What is drawn over what: a higher layer is drawn on top of a lower one. Within a
 		// layer, sprites that share a texture are drawn in the order they were added. Sprites
 		// in the same layer with different textures are drawn texture by texture, so if two

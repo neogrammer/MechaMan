@@ -4,7 +4,13 @@
 // Build setting: in this file's Properties, under HLSL Compiler > General, Shader Type has
 // to be "Pixel Shader (/ps)".
 Texture2D spriteTexture : register(t0);
-SamplerState spriteSampler : register(s0);
+SamplerState crispSampler : register(s0);	// point sampling: pixel art stays sharp
+SamplerState smoothSampler : register(s1);	// linear sampling: smoothed (Sprite::smooth)
+
+cbuffer SpriteFilter : register(b1)
+{
+	uint smooth;	// set for each draw call by SpriteRenderer::End
+};
 
 struct PixelShaderInput
 {
@@ -15,5 +21,9 @@ struct PixelShaderInput
 
 float4 main(PixelShaderInput input) : SV_Target
 {
-	return spriteTexture.Sample(spriteSampler, input.tex) * input.color;
+	float4 texel = smooth != 0
+		? spriteTexture.Sample(smoothSampler, input.tex)
+		: spriteTexture.Sample(crispSampler, input.tex);
+
+	return texel * input.color;
 }
